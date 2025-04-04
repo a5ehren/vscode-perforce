@@ -35,7 +35,7 @@ type StringMemento = MementoItem<SearchFilterValue<string>>;
 
 type PickWithValue<T> = vscode.QuickPickItem & { value?: T };
 
-export abstract class FilterItem<T> extends SelfExpandingTreeItem<any> {
+export abstract class FilterItem<T> extends SelfExpandingTreeItem<FilterItem<T>> {
     private _selected?: SearchFilterValue<T>;
     private _didChangeFilter: vscode.EventEmitter<void>;
     public command: vscode.Command;
@@ -72,7 +72,7 @@ export abstract class FilterItem<T> extends SelfExpandingTreeItem<any> {
         } else {
             this.description = "<" + this._filter.defaultText + ">";
         }
-        this._mementoItem.save(value);
+        void this._mementoItem.save(value);
     }
 
     private setValue(value?: SearchFilterValue<T>) {
@@ -359,7 +359,7 @@ class ClientFilter extends FilterItem<string> {
     }
 }
 
-export class FileFilterValue extends SelfExpandingTreeItem<any> {
+export class FileFilterValue extends SelfExpandingTreeItem<FileFilterValue> {
     constructor(path: string) {
         super(path);
     }
@@ -385,7 +385,7 @@ export class FileFilterValue extends SelfExpandingTreeItem<any> {
     }
 }
 
-export class FileFilterAdd extends SelfExpandingTreeItem<any> {
+export class FileFilterAdd extends SelfExpandingTreeItem<FileFilterAdd> {
     public command: vscode.Command;
 
     constructor(private _command: vscode.Command) {
@@ -608,11 +608,11 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
     }
 
     private saveDefault() {
-        this._memento.save(this.value);
+        void this._memento.save(this.value);
     }
 }
 
-export class FilterRootItem extends SelfExpandingTreeItem<any> {
+export class FilterRootItem extends SelfExpandingTreeItem<FilterItem<unknown> | FileFilterRoot> {
     private _userFilter: UserFilter;
     private _clientFilter: ClientFilter;
     private _statusFilter: StatusFilter;
@@ -656,7 +656,7 @@ export class FilterRootItem extends SelfExpandingTreeItem<any> {
         this._subscriptions.push(this._didChangeFilters);
     }
 
-    subscribeToChanges(filters: (FilterItem<any> | FileFilterRoot)[]) {
+    subscribeToChanges(filters: (FilterItem<unknown> | FileFilterRoot)[]) {
         filters.forEach((f) =>
             this._subscriptions.push(
                 f.onDidChangeFilter(() => this._didChangeFilters.fire()),
@@ -686,13 +686,11 @@ export class FilterRootItem extends SelfExpandingTreeItem<any> {
 
 export function makeFilterLabelText(filters: Filters, resultCount: number) {
     const parts = [
-        filters.status ? filters.status : undefined,
-        filters.user ? "User: " + filters.user : undefined,
-        filters.client ? "Client: " + filters.client : undefined,
-        filters.files && filters.files.length > 0
-            ? pluralise(filters.files.length, "path")
-            : undefined,
-    ].filter(isTruthy);
+        filters.status,
+        filters.user && `User: ${filters.user}`,
+        filters.client && `Client: ${filters.client}`,
+        filters.files && filters.files.length > 0 && pluralise(filters.files.length, "path"),
+    ].filter(Boolean);
     const filterText = parts.length > 0 ? parts.join("] [") : "no filters";
     return (
         "(" +

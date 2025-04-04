@@ -33,7 +33,7 @@ import { operationCreatesFile, GetStatus, operationDeletesFile } from "../scm/St
 import * as DiffProvider from "../DiffProvider";
 import { MementoItem, MementoKeys } from "../MementoItem";
 
-class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
+class ChooseProviderTreeItem extends SelfExpandingTreeItem<ChooseProviderTreeItem> {
     constructor(private _providerSelection: ProviderSelection) {
         super("Context:", vscode.TreeItemCollapsibleState.None);
 
@@ -103,7 +103,7 @@ class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
     }
 }
 
-class GoToChangelist extends SelfExpandingTreeItem<any> {
+class GoToChangelist extends SelfExpandingTreeItem<GoToChangelist> {
     constructor(private _chooseProvider: ChooseProviderTreeItem) {
         super("Go to changelist...");
 
@@ -127,12 +127,12 @@ class GoToChangelist extends SelfExpandingTreeItem<any> {
         const chnum = await Display.requestChangelistNumber();
 
         if (chnum !== undefined) {
-            showQuickPickForChangelist(selectedClient.configSource, chnum);
+            void showQuickPickForChangelist(selectedClient.configSource, chnum);
         }
     }
 }
 
-class RunSearch extends SelfExpandingTreeItem<any> {
+class RunSearch extends SelfExpandingTreeItem<RunSearch> {
     private _autoRefresh: boolean;
 
     constructor(
@@ -164,7 +164,7 @@ class RunSearch extends SelfExpandingTreeItem<any> {
         this._autoRefresh = autoRefresh;
         this.label = RunSearch.makeLabel(this._autoRefresh);
         this.didChange();
-        this._memento.save(autoRefresh);
+        void this._memento.save(autoRefresh);
     }
 }
 
@@ -172,7 +172,7 @@ interface Diffable {
     perforceUri: vscode.Uri;
 }
 
-class SearchResultShelvedFile extends SelfExpandingTreeItem<any> implements Diffable {
+class SearchResultShelvedFile extends SelfExpandingTreeItem<SearchResultShelvedFile> implements Diffable {
     constructor(
         private _resource: vscode.Uri,
         private _file: p4.DepotFileOperation,
@@ -236,7 +236,7 @@ class SearchResultShelvedSubTree extends SelfExpandingTreeItem<SearchResultShelv
     }
 }
 
-class SearchResultFile extends SelfExpandingTreeItem<any> implements Diffable {
+class SearchResultFile extends SelfExpandingTreeItem<SearchResultFile> implements Diffable {
     constructor(
         private _resource: vscode.Uri,
         private _file: p4.DepotFileOperation,
@@ -340,8 +340,8 @@ interface Pinnable extends vscode.Disposable {
     pinned: boolean;
 }
 
-function isPinnable(obj: any): obj is Pinnable {
-    return obj?.pin && obj.unpin;
+function isPinnable(obj: unknown): obj is Pinnable {
+    return typeof obj === 'object' && obj !== null && 'pin' in obj && 'unpin' in obj;
 }
 
 abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> {
@@ -357,7 +357,7 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
         this._results = dedupe(results, "chnum"); // with multiple file paths, p4 returns duplicates
         const children = this._results.map((r) => new SearchResultItem(this.resource, r));
         children.forEach((child) => this.addChild(child));
-        this.populateChangeDetails();
+        void this.populateChangeDetails();
 
         this.contextValue = this._isPinned ? "results-pinned" : "results-unpinned";
     }
@@ -386,7 +386,7 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
             child?.addDetails(d);
         });
         this.didChange();
-        this.populateShelvedFiles();
+        void this.populateShelvedFiles();
     }
 
     async populateShelvedFiles() {
@@ -408,7 +408,9 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
                 child?.addShelvedFiles(d);
             });
             this.didChange();
-        } catch (err) {}
+        } catch {
+            // Silently ignore shelved file errors
+        }
     }
 
     public async refresh() {
@@ -419,7 +421,7 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
         );
         children.forEach((child) => this.addChild(child));
         this.reveal();
-        this.populateChangeDetails();
+        void this.populateChangeDetails();
     }
 
     protected abstract getNewResults(): Promise<ChangeInfo[]>;
@@ -441,7 +443,7 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
     }
 
     showInQuickPick() {
-        showResultsInQuickPick(
+        void showResultsInQuickPick(
             this._resource,
             this.labelText ?? "Search Results",
             this._results,
@@ -545,7 +547,9 @@ async function executeSearch(
     );
 }
 
-class ChangelistTreeRoot extends SelfExpandingTreeRoot<any> {
+class ChangelistTreeRoot extends SelfExpandingTreeRoot<
+    ChooseProviderTreeItem | GoToChangelist | FilterRootItem | RunSearch | AllResultsTree
+> {
     private _chooseProvider: ChooseProviderTreeItem;
     private _filterRoot: FilterRootItem;
     private _allResults: AllResultsTree;
@@ -566,14 +570,14 @@ class ChangelistTreeRoot extends SelfExpandingTreeRoot<any> {
         this._subscriptions.push(
             this._filterRoot.onDidChangeFilters(() => {
                 if (this._runSearch.autoRefresh) {
-                    this.executeSearch();
+                    void this.executeSearch();
                 }
             }),
         );
         this._subscriptions.push(
             this._runSearch.onChanged(() => {
                 if (this._runSearch.autoRefresh) {
-                    this.executeSearch();
+                    void this.executeSearch();
                 }
             }),
         );
@@ -623,12 +627,12 @@ export function registerChangelistSearch(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.resetFilter",
-        (arg: FilterItem<any>) => arg.reset(),
+        (arg: FilterItem<unknown>) => arg.reset(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.setFilter",
-        (arg: FilterItem<any>) => arg.requestNewValue(),
+        (arg: FilterItem<unknown>) => arg.requestNewValue(),
     );
 
     vscode.commands.registerCommand(

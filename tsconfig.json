@@ -4,6 +4,13 @@
         "outDir": "out",
         "verbatimModuleSyntax": false
     },
+    "include": [
+        "**/*.ts",
+        "**/*.mts",
+        "**/*.cts",
+        "**/*.mjs",
+        "eslint.config.mjs"
+    ],
     "exclude": [
         "node_modules"
     ]
