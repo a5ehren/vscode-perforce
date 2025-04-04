@@ -136,10 +136,10 @@ function lastArgAsStrings(
     return pathsToArgs(lastArg, options);
 }
 
-type FlagMapperOptions = {
+interface FlagMapperOptions {
     lastArgIsFormattedArray?: boolean;
     ignoreRevisionFragments?: boolean;
-};
+}
 
 /**
  * Create a function that maps an object of type P into an array of command arguments
@@ -165,7 +165,7 @@ export function flagMapper<P extends FlagDefinition<P>>(
                     ];
                 }),
                 lastArg
-                    ? lastArgAsStrings(params[lastArg] as FlagValue, options)
+                    ? lastArgAsStrings(params[lastArg], options)
                     : undefined
             )
         );
@@ -212,13 +212,13 @@ export function pathsToArgs(arr?: PerforceFile[], options?: FlagMapperOptions) {
     );
 }
 
-type CommandParams = {
+interface CommandParams {
     input?: string;
     hideStdErr?: boolean;
     stdErrIsOk?: boolean;
     useTerminal?: boolean;
     logStdOut?: boolean;
-};
+}
 
 export function runPerforceCommandIgnoringStdErr(
     resource: vscode.Uri,

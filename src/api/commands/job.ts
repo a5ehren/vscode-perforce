@@ -9,13 +9,13 @@ import { RawField } from "../CommonTypes";
 import { getBasicField, parseSpecOutput } from "../SpecParser";
 import { isTruthy } from "../../TsUtils";
 
-export type Job = {
+export interface Job {
     job?: string;
     status?: string;
     user?: string;
     description?: string;
     rawFields: RawField[];
-};
+}
 
 function mapToJobFields(rawFields: RawField[]): Job {
     return {
@@ -29,9 +29,9 @@ function mapToJobFields(rawFields: RawField[]): Job {
 
 const parseJobSpec = pipe(parseSpecOutput, mapToJobFields);
 
-export type JobOptions = {
+export interface JobOptions {
     existingJob?: string;
-};
+}
 
 const jobFlags = flagMapper<JobOptions>([], "existingJob", ["-o"], {
     lastArgIsFormattedArray: true,
@@ -41,14 +41,14 @@ export const outputJob = makeSimpleCommand("job", jobFlags);
 
 export const getJob = asyncOuputHandler(outputJob, parseJobSpec);
 
-export type JobFix = {
+export interface JobFix {
     job: string;
     chnum: string;
     date: string;
     user: string;
     client: string;
     status: string;
-};
+}
 
 function parseJobFix(line: string): JobFix | undefined {
     const matches = /^(\S*) fixed by change (\d+) on (\S*) by (\S*?)@(\S*) \((.*?)\)$/.exec(
@@ -74,23 +74,23 @@ function parseFixesOutuput(output: string) {
     return lines.map(parseJobFix).filter(isTruthy);
 }
 
-export type FixesOptions = {
+export interface FixesOptions {
     job?: string;
-};
+}
 
 const fixesFlags = flagMapper<FixesOptions>([["j", "job"]]);
 const fixesCommand = makeSimpleCommand("fixes", fixesFlags);
 
 export const fixes = asyncOuputHandler(fixesCommand, parseFixesOutuput);
 
-export type InputRawJobSpecOptions = {
+export interface InputRawJobSpecOptions {
     input: string;
-};
+}
 
-export type CreatedJob = {
+export interface CreatedJob {
     rawOutput: string;
     job?: string;
-};
+}
 
 function parseCreatedJob(createdStr: string): CreatedJob {
     const matches = /Job (\S*) (saved|not changed)/.exec(createdStr);

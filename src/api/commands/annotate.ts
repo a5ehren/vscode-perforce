@@ -21,12 +21,12 @@ const annotateFlags = flagMapper<AnnotateOptions>(
 
 const annotateCommand = makeSimpleCommand("annotate", annotateFlags);
 
-export type Annotation = {
+export interface Annotation {
     line: string;
     revisionOrChnum: string;
     user?: string;
     date?: string;
-};
+}
 
 function parseAnnotateOutput(
     output: string,

@@ -119,12 +119,12 @@ async function showDiffChooserWithOptions(
     await qp.showQuickPick("filediff", uri, includeNewerRevisions);
 }
 
-type CachedOutput = {
+interface CachedOutput {
     filelog?: p4.FileLogItem[];
     haveFile?: p4.HaveFile;
-};
+}
 
-type ChangeDetails = {
+interface ChangeDetails {
     all: p4.FileLogItem[];
     current: p4.FileLogItem;
     currentIndex: number;
@@ -132,7 +132,7 @@ type ChangeDetails = {
     prev?: p4.FileLogItem;
     latest: p4.FileLogItem;
     haveFile?: p4.HaveFile;
-};
+}
 
 function makeCache(details: ChangeDetails): CachedOutput {
     return {

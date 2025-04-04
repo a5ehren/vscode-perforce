@@ -102,8 +102,8 @@ async function getMovedFromFile(
         chnum: change.chnum,
     });
     if (fstat?.[0]) {
-        const fromPath = fstat[0]["resolveFromFile0"];
-        const endFromRev = fstat[0]["resolveEndFromRev0"];
+        const fromPath = fstat[0].resolveFromFile0;
+        const endFromRev = fstat[0].resolveEndFromRev0;
         if (fromPath && endFromRev) {
             return PerforceUri.fromDepotPath(resource, fromPath, endFromRev);
         }

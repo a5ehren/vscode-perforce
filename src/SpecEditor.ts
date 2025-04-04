@@ -5,8 +5,8 @@ import { TextEncoder } from "util";
 import { Display } from "./Display";
 import { PerforceSCMProvider } from "./ScmProvider";
 
-type SpecInstance = { resource: string; lastAccessed: number };
-type SpecStore = { [key: string]: SpecInstance };
+interface SpecInstance { resource: string; lastAccessed: number }
+type SpecStore = Record<string, SpecInstance>;
 
 abstract class SpecEditor {
     private _state: vscode.Memento;

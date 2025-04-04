@@ -102,7 +102,7 @@ export const unshelveChangeQuickPickProvider: qp.ActionableQuickPickProvider = {
     provideActions: async (
         resourceOrStr: vscode.Uri | string,
         chnum: string,
-        clobber: boolean = true,
+        clobber = true,
         branchMapping?: string
     ): Promise<qp.ActionableQuickPick> => {
         const resource = qp.asUri(resourceOrStr);

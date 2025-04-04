@@ -10,10 +10,10 @@ import { configAccessor } from "../ConfigService";
 
 const nbsp = "\xa0";
 
-type DecoratedChange = {
+interface DecoratedChange {
     chnum: string;
     decoration: vscode.DecorationOptions;
-};
+}
 
 const normalDecoration = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
@@ -29,12 +29,12 @@ const highlightedDecoration = vscode.window.createTextEditorDecorationType({
     overviewRulerLane: vscode.OverviewRulerLane.Left,
 });
 
-type LogInfo = {
+interface LogInfo {
     log: p4.FileLogItem;
     prev?: p4.FileLogItem;
     index: number;
     ageRating: number;
-};
+}
 
 export class AnnotationProvider {
     private static _annotationsByUri = new Map<vscode.Uri, AnnotationProvider>();
@@ -370,12 +370,12 @@ function makeDecorationForChange(
 
 type DecorationWithoutRange = Omit<vscode.DecorationOptions, "range">;
 
-type ChangeDecoration = {
+interface ChangeDecoration {
     // decoration for first line of an annotation
     top: DecorationWithoutRange;
     // decoration for subsequent lines
     body: DecorationWithoutRange;
-};
+}
 
 function makeDecorationsByChnum(
     underlying: vscode.Uri,
@@ -441,7 +441,7 @@ function getDecorations(
     const decorations = makeDecorationsByChnum(underlying, latestChange, logsByChnum);
     return annotations
         .map((a, i) => {
-            if (!a || !a?.revisionOrChnum) {
+            if (!a?.revisionOrChnum) {
                 return;
             }
 

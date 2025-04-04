@@ -336,11 +336,11 @@ interface Pinnable extends vscode.Disposable {
 }
 
 function isPinnable(obj: any): obj is Pinnable {
-    return obj && obj.pin && obj.unpin;
+    return obj?.pin && obj.unpin;
 }
 
 abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> {
-    private _isPinned: boolean = false;
+    private _isPinned = false;
     private _results: ChangeInfo[];
 
     constructor(private _resource: vscode.Uri, results: ChangeInfo[], label: string) {

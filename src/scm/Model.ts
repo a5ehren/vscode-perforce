@@ -34,10 +34,10 @@ function isResourceGroup(arg: any): arg is SourceControlResourceGroup {
     return arg && arg.id !== undefined;
 }
 
-export type FstatInfo = {
+export interface FstatInfo {
     depotFile: string;
     [key: string]: string;
-};
+}
 
 export interface ResourceGroup extends SourceControlResourceGroup {
     model: Model;
@@ -46,7 +46,7 @@ export interface ResourceGroup extends SourceControlResourceGroup {
 }
 
 class ChangelistContext {
-    private _val: { [key: string]: true };
+    private _val: Record<string, true>;
 
     constructor(private _type: string) {
         this._val = {};
@@ -360,7 +360,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             });
 
             changeFields.files = changeFields.files.filter((_file, i) =>
-                this.isInWorkspace(infos[i]?.["clientFile"])
+                this.isInWorkspace(infos[i]?.clientFile)
             );
         }
         changeFields.description = descStr;
@@ -1143,11 +1143,11 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
     }
 
     private makeResourceForOpenFile(fstatInfo: FstatInfo): Resource | undefined {
-        const clientFile = fstatInfo["clientFile"];
-        const change = fstatInfo["change"];
-        const action = fstatInfo["action"];
-        const headType = fstatInfo["headType"];
-        const depotPath = Uri.file(fstatInfo["depotFile"]);
+        const clientFile = fstatInfo.clientFile;
+        const change = fstatInfo.change;
+        const action = fstatInfo.action;
+        const headType = fstatInfo.headType;
+        const depotPath = Uri.file(fstatInfo.depotFile);
 
         const uri = Uri.file(clientFile);
         if (
@@ -1356,8 +1356,8 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
     }
 
     private makeResourceForShelvedFile(chnum: string, fstatInfo: FstatInfo) {
-        const underlyingUri = fstatInfo["clientFile"]
-            ? Uri.file(fstatInfo["clientFile"])
+        const underlyingUri = fstatInfo.clientFile
+            ? Uri.file(fstatInfo.clientFile)
             : undefined;
 
         if (this._config.hideNonWorkspaceFiles === HideNonWorkspace.HIDE_FILES) {
@@ -1376,7 +1376,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             underlyingUri,
             chnum,
             true,
-            fstatInfo["action"],
+            fstatInfo.action,
             fstatInfo
         );
         return resource;

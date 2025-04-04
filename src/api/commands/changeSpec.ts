@@ -30,9 +30,9 @@ function mapToChangeFields(rawFields: RawField[]): ChangeSpec {
 
 const parseChangeSpec = pipe(parseSpecOutput, mapToChangeFields);
 
-export type ChangeSpecOptions = {
+export interface ChangeSpecOptions {
     existingChangelist?: string;
-};
+}
 
 const changeFlags = flagMapper<ChangeSpecOptions>([], "existingChangelist", ["-o"], {
     lastArgIsFormattedArray: true,
@@ -66,18 +66,18 @@ function getDefinedSpecFields(spec: ChangeSpec): RawField[] {
     )(spec);
 }
 
-export type InputChangeSpecOptions = {
+export interface InputChangeSpecOptions {
     spec: ChangeSpec;
-};
+}
 
-export type InputRawChangeSpecOptions = {
+export interface InputRawChangeSpecOptions {
     input: string;
-};
+}
 
-export type CreatedChangelist = {
+export interface CreatedChangelist {
     rawOutput: string;
     chnum?: string;
-};
+}
 
 function parseCreatedChangelist(createdStr: string): CreatedChangelist {
     const matches = /Change\s(\d+)\s/.exec(createdStr);

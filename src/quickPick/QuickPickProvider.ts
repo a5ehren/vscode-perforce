@@ -10,12 +10,12 @@ export function asUri(uri: vscode.Uri | string) {
     return uri;
 }
 
-export type ActionableQuickPick = {
+export interface ActionableQuickPick {
     items: ActionableQuickPickItem[];
     excludeFromHistory?: boolean;
     placeHolder: string;
     recentKey?: string;
-};
+}
 
 export interface ActionableQuickPickProvider {
     provideActions: (...args: any) => Promise<ActionableQuickPick>;
@@ -27,12 +27,12 @@ export interface ActionableQuickPickItem extends vscode.QuickPickItem {
 
 const registeredQuickPickProviders = new Map<string, ActionableQuickPickProvider>();
 
-type QuickPickInstance = {
+interface QuickPickInstance {
     type: string;
     args: any[];
     description: string;
     recentKey: string;
-};
+}
 
 const quickPickStack: QuickPickInstance[] = [];
 // unique recent items by recentKey
