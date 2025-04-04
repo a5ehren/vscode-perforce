@@ -1,11 +1,7 @@
-import { expect } from "chai";
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
-
+const chai = require("chai");
+const { expect } = chai;
 import * as vscode from "vscode";
-
-import * as sinon from "sinon";
+const sinon = require("sinon");
 import { stubExecute, StubPerforceModel } from "../helpers/StubPerforceModel";
 import p4Commands from "../helpers/p4Commands";
 import { PerforceCommands } from "../../PerforceCommands";
@@ -17,11 +13,19 @@ import { PerforceSCMProvider } from "../../ScmProvider";
 import { Status } from "../../scm/Status";
 import * as Path from "path";
 
-chai.use(sinonChai);
-chai.use(p4Commands);
-chai.use(chaiAsPromised);
-
 describe("Perforce Command Module (integration)", () => {
+    before(async () => {
+        const [chaiAsPromisedModule, sinonChaiModule] = await Promise.all([
+            import("chai-as-promised"),
+            import("sinon-chai")
+        ]);
+        chai.use(chaiAsPromisedModule.default);
+        chai.use(sinonChaiModule.default);
+        chai.use(p4Commands);
+        await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+        initPerforceFsProvider();
+    });
+
     if (!vscode.workspace.workspaceFolders?.[0]) {
         throw new Error("No workspace folders open");
     }
@@ -32,11 +36,6 @@ describe("Perforce Command Module (integration)", () => {
     let stubModel: StubPerforceModel;
 
     let refresh: sinon.SinonSpy;
-
-    before(async () => {
-        await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-        initPerforceFsProvider();
-    });
 
     beforeEach(() => {
         stubExecute();

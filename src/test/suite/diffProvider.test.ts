@@ -1,25 +1,27 @@
-import { expect } from "chai";
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
-
+const chai = require('chai');
+const { expect } = chai;
 import * as vscode from "vscode";
-
 import sinon from "sinon";
 import * as PerforceUri from "../../PerforceUri";
 import { Status } from "../../scm/Status";
 import p4Commands from "../helpers/p4Commands";
 import { StubPerforceModel, StubFile } from "../helpers/StubPerforceModel";
 import * as DiffProvider from "../../DiffProvider";
-
 import { getLocalFile, getWorkspaceUri } from "../helpers/testUtils";
 import Sinon from "sinon";
 import { Display } from "../../Display";
 import { HaveFile } from "../../api/PerforceApi";
 
-chai.use(sinonChai);
-chai.use(p4Commands);
-chai.use(chaiAsPromised);
+let chaiAsPromised: any;
+let sinonChai: any;
+
+before(async () => {
+    chaiAsPromised = (await import("chai-as-promised")).default;
+    sinonChai = (await import("sinon-chai")).default;
+    chai.use(sinonChai);
+    chai.use(p4Commands);
+    chai.use(chaiAsPromised);
+});
 
 describe("Diff Provider", () => {
     if (!vscode.workspace.workspaceFolders?.[0]) {

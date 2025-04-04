@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { expect } from "chai";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
-
+const chai = require('chai');
+const { expect } = chai;
 import * as vscode from "vscode";
 
 import sinon from "sinon";
@@ -14,9 +11,16 @@ import { ConfigAccessor, configAccessor } from "../../ConfigService";
 import { getLocalFile, getWorkspaceUri } from "../helpers/testUtils";
 import FileSystemActions from "../../FileSystemActions";
 
-chai.use(sinonChai);
-chai.use(p4Commands);
-chai.use(chaiAsPromised);
+let chaiAsPromised: any;
+let sinonChai: any;
+
+before(async () => {
+    chaiAsPromised = (await import("chai-as-promised")).default;
+    sinonChai = (await import("sinon-chai")).default;
+    chai.use(sinonChai);
+    chai.use(p4Commands);
+    chai.use(chaiAsPromised);
+});
 
 const basicFiles = {
     edit: ["testFolder", "a.txt"],
@@ -111,6 +115,7 @@ describe("File System Actions", () => {
             eventProvider.onWillDeleteFiles.attrs.fire?.({
                 files: files,
                 waitUntil: waitUntil,
+                token: new vscode.CancellationTokenSource().token
             });
 
             expect(waitUntil).to.have.been.called;
