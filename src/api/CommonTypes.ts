@@ -2,7 +2,10 @@ import { Uri } from "vscode";
 
 export interface NoOpts {}
 
-export interface FixedJob { id: string; description: string[] }
+export interface FixedJob {
+    id: string;
+    description: string[];
+}
 
 export interface ChangeInfo {
     chnum: string;

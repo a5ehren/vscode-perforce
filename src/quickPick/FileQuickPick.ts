@@ -24,7 +24,7 @@ export const fileQuickPickProvider: qp.ActionableQuickPickProvider = {
             makeClipboardPicks(uri, changes),
             makeSyncPicks(uri, changes),
             makeDiffPicks(uri, changes),
-            makeChangelistPicks(uri, changes)
+            makeChangelistPicks(uri, changes),
         );
         return {
             items: actions,
@@ -44,7 +44,7 @@ export const fileRevisionQuickPickProvider: qp.ActionableQuickPickProvider = {
         includeIntegrations: boolean,
         includeIntegrationTargets: boolean,
         includeNewerRevisions: boolean,
-        cached?: CachedOutput
+        cached?: CachedOutput,
     ) => {
         const uri = qp.asUri(uriOrStr);
         const changes = await getChangeDetails(uri, cached);
@@ -53,7 +53,7 @@ export const fileRevisionQuickPickProvider: qp.ActionableQuickPickProvider = {
             changes,
             includeIntegrations,
             includeIntegrationTargets,
-            includeNewerRevisions
+            includeNewerRevisions,
         );
         return {
             items: actions,
@@ -76,7 +76,7 @@ async function showRevChooserWithIntegrations(
     includeIntegrations: boolean,
     includeIntegrationTargets: boolean,
     includeNewerRevisions: boolean,
-    cached?: CachedOutput
+    cached?: CachedOutput,
 ) {
     await qp.showQuickPick(
         "filerev",
@@ -84,14 +84,14 @@ async function showRevChooserWithIntegrations(
         includeIntegrations,
         includeIntegrationTargets,
         includeNewerRevisions,
-        cached
+        cached,
     );
 }
 
 export const fileDiffQuickPickProvider: qp.ActionableQuickPickProvider = {
     provideActions: async (
         uriOrStr: vscode.Uri | string,
-        includeNewerRevisions: boolean
+        includeNewerRevisions: boolean,
     ) => {
         const uri = qp.asUri(uriOrStr);
         const changes = await getChangeDetails(uri, undefined, true);
@@ -114,7 +114,7 @@ export async function showDiffChooserForFile(uri: vscode.Uri) {
 
 async function showDiffChooserWithOptions(
     uri: vscode.Uri,
-    includeNewerRevisions: boolean
+    includeNewerRevisions: boolean,
 ) {
     await qp.showQuickPick("filediff", uri, includeNewerRevisions);
 }
@@ -172,7 +172,7 @@ function makeShortSummary(change: p4.FileLogItem) {
 async function getChangeDetails(
     uri: vscode.Uri,
     cached?: CachedOutput,
-    followBranches?: boolean
+    followBranches?: boolean,
 ): Promise<ChangeDetails> {
     const haveFile = cached?.haveFile ?? (await p4.have(uri, { file: uri }));
 
@@ -208,12 +208,12 @@ function makeAllRevisionPicks(
     changes: ChangeDetails,
     includeIntegrations: boolean,
     includeIntegrationTargets: boolean,
-    includeNewerRevisions: boolean
+    includeNewerRevisions: boolean,
 ): qp.ActionableQuickPickItem[] {
     const ageFiltered = includeNewerRevisions
         ? changes.all
         : changes.all.slice(
-              changes.all.findIndex((c) => c.chnum === changes.current.chnum)
+              changes.all.findIndex((c) => c.chnum === changes.current.chnum),
           );
     const revPicks = ageFiltered.flatMap((change) => {
         const icon =
@@ -241,7 +241,7 @@ function makeAllRevisionPicks(
                 const revUri = PerforceUri.fromDepotPath(
                     PerforceUri.getUsableWorkspace(uri) ?? uri,
                     change.file,
-                    change.revision
+                    change.revision,
                 );
                 return showQuickPickForFile(revUri, makeCache(changes));
             },
@@ -261,7 +261,7 @@ function makeAllRevisionPicks(
                     const revUri = PerforceUri.fromDepotPath(
                         PerforceUri.getUsableWorkspace(uri) ?? uri,
                         rev.file,
-                        rev.endRev
+                        rev.endRev,
                     );
                     return showQuickPickForFile(revUri);
                 },
@@ -282,7 +282,7 @@ function makeAllRevisionPicks(
                     const revUri = PerforceUri.fromDepotPath(
                         PerforceUri.getUsableWorkspace(uri) ?? uri,
                         rev.file,
-                        rev.endRev
+                        rev.endRev,
                     );
                     return showQuickPickForFile(revUri);
                 },
@@ -303,7 +303,7 @@ function makeAllRevisionPicks(
                     includeIntegrations,
                     !includeIntegrationTargets,
                     includeNewerRevisions,
-                    makeCache(changes)
+                    makeCache(changes),
                 );
             },
         },
@@ -317,7 +317,7 @@ function makeAllRevisionPicks(
                     !includeIntegrations,
                     includeIntegrationTargets,
                     includeNewerRevisions,
-                    makeCache(changes)
+                    makeCache(changes),
                 );
             },
         },
@@ -331,7 +331,7 @@ function makeAllRevisionPicks(
                     includeIntegrations,
                     includeIntegrationTargets,
                     !includeNewerRevisions,
-                    makeCache(changes)
+                    makeCache(changes),
                 );
             },
         },
@@ -343,12 +343,12 @@ function makeAllRevisionPicks(
 function makeDiffRevisionPicks(
     uri: vscode.Uri,
     changes: ChangeDetails,
-    includeNewerRevisions: boolean
+    includeNewerRevisions: boolean,
 ): qp.ActionableQuickPickItem[] {
     const currentUri = PerforceUri.fromDepotPath(
         PerforceUri.getUsableWorkspace(uri) ?? uri,
         changes.current.file,
-        changes.current.revision
+        changes.current.revision,
     );
     const controls: qp.ActionableQuickPickItem[] = [
         {
@@ -364,15 +364,15 @@ function makeDiffRevisionPicks(
     const ageFiltered = includeNewerRevisions
         ? changes.all
         : changes.all.slice(
-              changes.all.findIndex((change) => change.chnum === changes.current.chnum)
+              changes.all.findIndex((change) => change.chnum === changes.current.chnum),
           );
     const revPicks = ageFiltered.map((change, i) => {
         const prefix =
             change === changes.current
                 ? "$(location) "
                 : change.file === changes.current.file
-                ? "$(debug-stackframe-dot) "
-                : "$(git-merge) " + change.file;
+                  ? "$(debug-stackframe-dot) "
+                  : "$(git-merge) " + change.file;
         const isOldRev = i > changes.currentIndex;
         return {
             label: prefix + "#" + change.revision,
@@ -388,11 +388,11 @@ function makeDiffRevisionPicks(
                 const thisUri = PerforceUri.fromDepotPath(
                     PerforceUri.getUsableWorkspace(uri) ?? uri,
                     change.file,
-                    change.revision
+                    change.revision,
                 );
                 DiffProvider.diffFiles(
                     isOldRev ? thisUri : currentUri,
-                    isOldRev ? currentUri : thisUri
+                    isOldRev ? currentUri : thisUri,
                 );
             },
         };
@@ -402,12 +402,12 @@ function makeDiffRevisionPicks(
 
 function makeNextAndPrevPicks(
     uri: vscode.Uri,
-    changes: ChangeDetails
+    changes: ChangeDetails,
 ): qp.ActionableQuickPickItem[] {
     const prev = changes.prev;
     const next = changes.next;
     const integFrom = changes.current.integrations.find(
-        (i) => i.direction === p4.Direction.FROM
+        (i) => i.direction === p4.Direction.FROM,
     );
     return [
         prev
@@ -418,7 +418,7 @@ function makeNextAndPrevPicks(
                       const prevUri = PerforceUri.fromDepotPath(
                           PerforceUri.getUsableWorkspace(uri) ?? uri,
                           prev.file,
-                          prev.revision
+                          prev.revision,
                       );
                       return showQuickPickForFile(prevUri, makeCache(changes));
                   },
@@ -435,7 +435,7 @@ function makeNextAndPrevPicks(
                       const nextUri = PerforceUri.fromDepotPath(
                           PerforceUri.getUsableWorkspace(uri) ?? uri,
                           next.file,
-                          next.revision
+                          next.revision,
                       );
                       return showQuickPickForFile(nextUri, makeCache(changes));
                   },
@@ -464,7 +464,7 @@ function makeNextAndPrevPicks(
                       const integUri = PerforceUri.fromDepotPath(
                           PerforceUri.getUsableWorkspace(uri) ?? uri,
                           integFrom.file,
-                          integFrom.endRev
+                          integFrom.endRev,
                       );
                       return showQuickPickForFile(integUri);
                   },
@@ -480,19 +480,19 @@ function makeNextAndPrevPicks(
 
 function makeClipboardPicks(
     _uri: vscode.Uri,
-    changes: ChangeDetails
+    changes: ChangeDetails,
 ): qp.ActionableQuickPickItem[] {
     return [
         qp.makeClipPick(
             "depot path",
-            changes.current.file + "#" + changes.current.revision
+            changes.current.file + "#" + changes.current.revision,
         ),
     ];
 }
 
 function makeSyncPicks(
     uri: vscode.Uri,
-    change: ChangeDetails
+    change: ChangeDetails,
 ): qp.ActionableQuickPickItem[] {
     return [
         {
@@ -514,7 +514,7 @@ function makeSyncPicks(
 
 function makeDiffPicks(
     uri: vscode.Uri,
-    changes: ChangeDetails
+    changes: ChangeDetails,
 ): qp.ActionableQuickPickItem[] {
     const prev = changes.prev;
     const latest = changes.latest;
@@ -550,7 +550,7 @@ function makeDiffPicks(
                       prev.file,
                       prev.revision,
                       changes.current.file,
-                      changes.current.revision
+                      changes.current.revision,
                   ),
                   performAction: () => DiffProvider.diffPreviousIgnoringLeftInfo(uri),
               }
@@ -562,20 +562,20 @@ function makeDiffPicks(
                       changes.current.file,
                       changes.current.revision,
                       latest.file,
-                      latest.revision
+                      latest.revision,
                   ),
                   performAction: () =>
                       DiffProvider.diffFiles(
                           PerforceUri.fromDepotPath(
                               PerforceUri.getUsableWorkspace(uri) ?? uri,
                               changes.current.file,
-                              changes.current.revision
+                              changes.current.revision,
                           ),
                           PerforceUri.fromDepotPath(
                               PerforceUri.getUsableWorkspace(uri) ?? uri,
                               latest.file,
-                              latest.revision
-                          )
+                              latest.revision,
+                          ),
                       ),
               }
             : undefined,
@@ -588,9 +588,9 @@ function makeDiffPicks(
                           PerforceUri.fromDepotPath(
                               PerforceUri.getUsableWorkspace(uri) ?? uri,
                               changes.current.file,
-                              changes.current.revision
+                              changes.current.revision,
                           ),
-                          have.localUri
+                          have.localUri,
                       );
                   }
                 : undefined,
@@ -607,7 +607,7 @@ function makeDiffPicks(
 
 function makeChangelistPicks(
     uri: vscode.Uri,
-    changes: ChangeDetails
+    changes: ChangeDetails,
 ): qp.ActionableQuickPickItem[] {
     return [
         {

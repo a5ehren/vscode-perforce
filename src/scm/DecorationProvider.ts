@@ -13,13 +13,13 @@ export class DecorationProvider {
     private static _iconsRootPath: string = path.join(
         path.dirname(__dirname),
         "resources",
-        "icons"
+        "icons",
     );
 
     public static getDecorations(
         statuses: Status[],
         isShelved: boolean,
-        isUnresolved: boolean
+        isUnresolved: boolean,
     ): SourceControlResourceDecorations {
         const status = this.getDominantStatus(statuses);
         const light = {
@@ -27,7 +27,7 @@ export class DecorationProvider {
                 status,
                 isShelved,
                 isUnresolved,
-                "light"
+                "light",
             ),
         };
         const dark = {
@@ -35,7 +35,7 @@ export class DecorationProvider {
                 status,
                 isShelved,
                 isUnresolved,
-                "dark"
+                "dark",
             ),
         };
 
@@ -48,7 +48,7 @@ export class DecorationProvider {
 
     public static getFileDecorations(
         statuses: Status[],
-        isUnresolved: boolean
+        isUnresolved: boolean,
     ): FileDecoration {
         const status = this.getDominantStatus(statuses);
         const text = DecorationProvider.getStatusDecorations(status);
@@ -76,7 +76,7 @@ export class DecorationProvider {
 
         // The most dominant types are ADD, EDIT, and DELETE
         let index: number = statuses.findIndex(
-            (s) => s === Status.ADD || s === Status.EDIT || s === Status.DELETE
+            (s) => s === Status.ADD || s === Status.EDIT || s === Status.DELETE,
         );
         if (index >= 0) {
             return statuses[index];
@@ -84,7 +84,7 @@ export class DecorationProvider {
 
         // The next dominant type is MOVE
         index = statuses.findIndex(
-            (s) => s === Status.MOVE_ADD || s === Status.MOVE_DELETE
+            (s) => s === Status.MOVE_ADD || s === Status.MOVE_DELETE,
         );
         if (index >= 0) {
             return statuses[index];
@@ -97,7 +97,7 @@ export class DecorationProvider {
     private static getTooltipText(
         status: Status | undefined,
         isShelved: boolean,
-        isUnresolved: boolean
+        isUnresolved: boolean,
     ) {
         const items = [
             isShelved ? "Shelved" : undefined,
@@ -109,7 +109,7 @@ export class DecorationProvider {
 
     private static getIconUri(iconName: string, theme: string): Uri {
         return Uri.file(
-            path.join(DecorationProvider._iconsRootPath, theme, `${iconName}.svg`)
+            path.join(DecorationProvider._iconsRootPath, theme, `${iconName}.svg`),
         );
     }
 
@@ -117,7 +117,7 @@ export class DecorationProvider {
         status: Status | undefined,
         isShelved: boolean,
         isUnresolved: boolean,
-        theme: string
+        theme: string,
     ): Uri | undefined {
         const base =
             "status-" +
@@ -155,9 +155,11 @@ export class DecorationProvider {
         return status === Status.DELETE || status === Status.MOVE_DELETE;
     }
 
-    private static getStatusDecorations(
-        status?: Status
-    ): { badge?: string; tooltip?: string; colorName?: string } {
+    private static getStatusDecorations(status?: Status): {
+        badge?: string;
+        tooltip?: string;
+        colorName?: string;
+    } {
         switch (status) {
             case Status.ADD:
                 return { badge: "A", tooltip: "Add", colorName: "add" };
