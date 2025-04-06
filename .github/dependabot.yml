@@ -16,9 +16,9 @@ updates:
     versioning-strategy: "auto"
     allow:
       - dependency-type: "all"
-    #ignore:
-    #  - dependency-name: "*"
-    #    update-types: ["version-update:semver-major"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -27,3 +27,7 @@ updates:
       all-actions:
         patterns:
           - "*"
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: monthly
