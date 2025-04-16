@@ -641,9 +641,7 @@ export namespace PerforceCommands {
     }
 
     async function diffPrevious(fromDoc?: Uri) {
-        if (!fromDoc) {
-            fromDoc = window.activeTextEditor?.document.uri;
-        }
+        fromDoc ??= window.activeTextEditor?.document.uri;
         if (!fromDoc) {
             Display.showError("No file to diff");
             return false;
@@ -661,9 +659,7 @@ export namespace PerforceCommands {
     }
 
     async function diffNext(fromDoc?: Uri) {
-        if (!fromDoc) {
-            fromDoc = window.activeTextEditor?.document.uri;
-        }
+        fromDoc ??= window.activeTextEditor?.document.uri;
         if (!fromDoc) {
             Display.showError("No file to diff");
             return false;

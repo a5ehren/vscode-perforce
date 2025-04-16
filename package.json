@@ -2022,7 +2022,8 @@
     },
     "devDependencies": {
         "@arrows/composition": "^1.2.2",
-        "@eslint/js": "^9.23.0",
+        "@eslint/js": "^9.24.0",
+        "@modelcontextprotocol/sdk": "^1.8.0",
         "@tsconfig/node-ts": "^23.6.1",
         "@tsconfig/node20": "^20.1.5",
         "@types/chai": "^5.2.1",
@@ -2070,7 +2071,7 @@
         "eslint-fix": "eslint --fix --ext .js,.ts ./src",
         "eslint-check": "eslint --print-config ./src/extension.ts && eslint-config-prettier ./src/extension.ts",
         "prettier-write": "prettier --write src/**/*.ts src/**/*.js",
-        "compile": "tsc -p ./",
+        "compile": "tsc -p ./ && chmod 755 out/mcpServer/index.js",
         "pretest": "yarn run compile",
         "test": "yarn run unittest-nocompile && yarn run integrationtest-nocompile",
         "unittest-nocompile": "node ./out/test/runUnitTest.js",
@@ -2078,7 +2079,8 @@
         "unittest": "yarn run pretest && yarn run unittest-nocompile",
         "integrationtest": "yarn run pretest && yarn run integrationtest-nocompile",
         "watchunit": "tsc-watch -p ./ --onSuccess \"yarn run unittest-nocompile\"",
-        "watchintegration-linux": "tsc-watch -p ./ --onSuccess \"yarn run integrationtest-nocompile -- --display=:99\""
+        "watchintegration-linux": "tsc-watch -p ./ --onSuccess \"yarn run integrationtest-nocompile -- --display=:99\"",
+        "startMcpServer": "node out/mcpServer/index.js"
     },
     "packageManager": "yarn@4.8.1"
 }
