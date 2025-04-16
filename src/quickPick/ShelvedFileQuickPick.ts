@@ -17,7 +17,7 @@ export const shelvedFileQuickPickProvider: qp.ActionableQuickPickProvider = {
     provideActions: async (
         resourceOrStr: vscode.Uri | string, // string refers to a URI encoded with Uri.toString()
         operationOrStr: p4.DepotFileOperation | string, // string refers to an object serialised with JSON.stringify
-        changeOrChnum: p4.ChangeInfo | string // string refers to a change number, NOT an object
+        changeOrChnum: p4.ChangeInfo | string, // string refers to a change number, NOT an object
     ) => {
         const resource = qp.asUri(resourceOrStr);
         const change = await getChangeDetail(resource, changeOrChnum);
@@ -31,7 +31,7 @@ export const shelvedFileQuickPickProvider: qp.ActionableQuickPickProvider = {
         const depotUri = PerforceUri.fromDepotPath(
             resource,
             operation.depotPath,
-            operation.revision
+            operation.revision,
         );
         const have = await p4.have(resource, { file: depotUri });
         const actions = await makeDiffPicks(resource, depotUri, operation, have, change);
@@ -56,7 +56,7 @@ export const shelvedFileQuickPickProvider: qp.ActionableQuickPickProvider = {
 
 async function getChangeDetail(
     resource: vscode.Uri,
-    change: p4.ChangeInfo | string
+    change: p4.ChangeInfo | string,
 ): Promise<p4.ChangeInfo | undefined> {
     if (typeof change === "string") {
         return (
@@ -74,7 +74,7 @@ async function getChangeDetail(
 export async function showQuickPickForShelvedFile(
     resource: vscode.Uri,
     operation: p4.DepotFileOperation,
-    change: p4.ChangeInfo
+    change: p4.ChangeInfo,
 ) {
     await qp.showQuickPick("shelvedFile", resource, operation, change);
 }
@@ -93,7 +93,7 @@ function makeShelvedFileSummary(depotPath: string, changeInfo: p4.ChangeInfo) {
 async function getMovedFromFile(
     resource: vscode.Uri,
     operation: p4.DepotFileOperation,
-    change: p4.ChangeInfo
+    change: p4.ChangeInfo,
 ) {
     const fstat = await p4.getFstatInfoMapped(resource, {
         depotPaths: [operation.depotPath],
@@ -115,7 +115,7 @@ async function makeDiffPicks(
     uri: vscode.Uri,
     operation: p4.DepotFileOperation,
     have: p4.HaveFile | undefined,
-    change: p4.ChangeInfo
+    change: p4.ChangeInfo,
 ): Promise<qp.ActionableQuickPickItem[]> {
     const shelvedUri = PerforceUri.fromUriWithRevision(uri, "@=" + change.chnum);
     const status = GetStatus(operation.operation);
@@ -147,7 +147,7 @@ async function makeDiffPicks(
                       operation.depotPath,
                       operation.revision,
                       operation.depotPath,
-                      "@=" + change.chnum
+                      "@=" + change.chnum,
                   ),
                   performAction: () => DiffProvider.diffFiles(uri, shelvedUri),
               }
@@ -159,7 +159,7 @@ async function makeDiffPicks(
                       PerforceUri.getDepotPathFromDepotUri(movedFrom),
                       PerforceUri.getRevOrAtLabel(movedFrom),
                       operation.depotPath,
-                      "@=" + change.chnum
+                      "@=" + change.chnum,
                   ),
                   performAction: () => DiffProvider.diffFiles(movedFrom, shelvedUri),
               }

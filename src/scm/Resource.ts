@@ -102,7 +102,7 @@ export class Resource implements SourceControlResourceState {
         return DecorationProvider.getDecorations(
             this._statuses,
             this._isShelved,
-            this._isUnresolved
+            this._isUnresolved,
         );
     }
     /**
@@ -173,7 +173,7 @@ export class Resource implements SourceControlResourceState {
         private _isShelved: boolean,
         action: string,
         fstatInfo: FstatInfo,
-        headType?: string
+        headType?: string,
     ) {
         this._statuses = GetStatuses(action);
         this._workingRevision = fstatInfo.workRev ?? fstatInfo.haveRev ?? "have"; // (files opened for branch probably have a workRev but no haveRev)
@@ -187,7 +187,7 @@ export class Resource implements SourceControlResourceState {
         } else {
             if (!_underlyingUri) {
                 throw new Error(
-                    "Files in the local workspace must have an underlying URI"
+                    "Files in the local workspace must have an underlying URI",
                 );
             }
             this._resourceUri = _underlyingUri;
@@ -202,7 +202,7 @@ export class Resource implements SourceControlResourceState {
             this._fromFile = PerforceUri.fromDepotPath(
                 this._underlyingUri ?? model.workspaceUri,
                 fstatInfo.resolveFromFile0,
-                this._fromEndRev
+                this._fromEndRev,
             );
         }
         this._headType = GetFileType(headType);

@@ -14,7 +14,7 @@ const nbsp = "\xa0";
 export const jobQuickPickProvider: qp.ActionableQuickPickProvider = {
     provideActions: async (
         resourceOrStr: vscode.Uri | string,
-        job: string
+        job: string,
     ): Promise<qp.ActionableQuickPick> => {
         const resource = qp.asUri(resourceOrStr);
         const jobInfo = await p4.getJob(resource, { existingJob: job });
@@ -61,7 +61,7 @@ export async function showQuickPickForJob(resource: vscode.Uri, job: string) {
 
 async function makeFixesPicks(
     resource: vscode.Uri,
-    job: string
+    job: string,
 ): Promise<qp.ActionableQuickPickItem[]> {
     const fixes = await p4.fixes(resource, { job });
     const described =

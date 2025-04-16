@@ -55,7 +55,7 @@ async function makeIntegrationPicks(uri: vscode.Uri) {
                     const thisUri = PerforceUri.fromDepotPath(
                         PerforceUri.getUsableWorkspace(uri) ?? uri,
                         int.toFile,
-                        int.toRev
+                        int.toRev,
                     );
                     showQuickPickForFile(thisUri);
                 },

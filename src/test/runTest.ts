@@ -31,7 +31,7 @@ async function main() {
                 "\nRUNNING WITH DISPLAY: " +
                     params["--display"] +
                     "\n\tNb: Before running with this mode, you should have run Xvfb, e.g.\n" +
-                    "\tXvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\n"
+                    "\tXvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\n",
             );
         }
 

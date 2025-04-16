@@ -25,7 +25,7 @@ function makeCommandURI(command: string, ...args: any[]) {
 export function makeDiffURI(
     workspace: vscode.Uri,
     prevChange: p4.FileLogItem,
-    change: p4.FileLogItem
+    change: p4.FileLogItem,
 ) {
     const args = [
         makePerforceURI(workspace, prevChange),
@@ -38,7 +38,7 @@ export function makeDiffURI(
             prevChange.file,
             prevChange.revision,
             change.file,
-            change.revision
+            change.revision,
         ) +
         '"'
     );
@@ -53,7 +53,7 @@ function makeQuickPickFileURI(underlying: vscode.Uri, change: p4.FileLogItem) {
         makeCommandURI(
             "perforce.showQuickPick",
             "file",
-            makePerforceURI(underlying, change)
+            makePerforceURI(underlying, change),
         ) + ' "Show more actions for this file"'
     );
 }
@@ -89,7 +89,7 @@ export function makeAllLinks(
     underlying: vscode.Uri,
     change: p4.FileLogItem,
     latestChange: p4.FileLogItem,
-    prevChange?: p4.FileLogItem
+    prevChange?: p4.FileLogItem,
 ) {
     const diffLink = prevChange
         ? makeMarkdownLink("Diff Previous", makeDiffURI(underlying, prevChange, change))
@@ -98,7 +98,7 @@ export function makeAllLinks(
         change !== latestChange
             ? makeMarkdownLink(
                   "Diff this Revision",
-                  makeDiffURI(underlying, change, latestChange)
+                  makeDiffURI(underlying, change, latestChange),
               )
             : undefined;
     const annotateLink = prevChange
@@ -110,7 +110,7 @@ export function makeAllLinks(
     const moreLink = makeMarkdownLink(
         "…",
         makeQuickPickFileURI(underlying, change),
-        true
+        true,
     );
 
     return [diffLink, diffLatestLink, annotateLink, swarmLink, moreLink]
@@ -131,7 +131,7 @@ export function makeUserAndDateSummary(underlying: vscode.Uri, change: p4.FileLo
         makeMarkdownLink(
             "Change " + change.chnum,
             makeQuickPickChangeURI(underlying, change),
-            true
+            true,
         ) +
         " by **`" +
         change.user +

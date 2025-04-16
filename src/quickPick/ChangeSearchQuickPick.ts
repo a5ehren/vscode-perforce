@@ -8,7 +8,7 @@ export const changeSearchQuickPickProvider: qp.ActionableQuickPickProvider = {
     provideActions: (
         resource: vscode.Uri,
         title: string,
-        results: ChangeInfo[]
+        results: ChangeInfo[],
     ): Promise<qp.ActionableQuickPick> => {
         const items: vscode.QuickPickItem[] = results.map((change) => {
             const statusIcon = change.isPending ? "$(tools)" : "$(check)";
@@ -37,7 +37,7 @@ export const changeSearchQuickPickProvider: qp.ActionableQuickPickProvider = {
 export async function showQuickPickForChangeSearch(
     resource: vscode.Uri,
     title: string,
-    results: ChangeInfo[]
+    results: ChangeInfo[],
 ) {
     await qp.showQuickPick("changeResults", resource, title, results);
 }

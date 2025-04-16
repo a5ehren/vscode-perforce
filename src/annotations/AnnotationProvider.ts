@@ -51,27 +51,27 @@ export class AnnotationProvider {
     private constructor(
         private _doc: vscode.Uri,
         private _annotations: (p4.Annotation | undefined)[],
-        private _decorations: vscode.DecorationOptions[]
+        private _decorations: vscode.DecorationOptions[],
     ) {
         this._p4Uri = PerforceUri.fromUri(_doc);
         this._subscriptions = [];
         this._decorationsByChnum = this.mapToChnums();
 
         this._subscriptions.push(
-            vscode.window.onDidChangeActiveTextEditor(this.onEditorChanged.bind(this))
+            vscode.window.onDidChangeActiveTextEditor(this.onEditorChanged.bind(this)),
         );
 
         this._subscriptions.push(
             vscode.window.onDidChangeTextEditorSelection(
-                this.onSelectionChanged.bind(this)
-            )
+                this.onSelectionChanged.bind(this),
+            ),
         );
 
         this._subscriptions.push(
             vscode.workspace.onDidCloseTextDocument(
                 this.checkStillOpen.bind(this),
-                this._subscriptions
-            )
+                this._subscriptions,
+            ),
         );
 
         this.loadEditor();
@@ -180,7 +180,7 @@ export class AnnotationProvider {
     static getSecondaryIntegrations(log: p4.FileLogItem[]) {
         return log.flatMap((log) => {
             const froms = log.integrations.filter(
-                (i) => i.direction === p4.Direction.FROM
+                (i) => i.direction === p4.Direction.FROM,
             );
             if (froms.length > 1) {
                 return froms.filter((i) => i.operation === "copy");
@@ -195,7 +195,7 @@ export class AnnotationProvider {
     static async expandLogs(
         underlying: vscode.Uri,
         log: p4.FileLogItem[],
-        doneFiles: Set<string>
+        doneFiles: Set<string>,
     ): Promise<p4.FileLogItem[][]> {
         const needsMore = AnnotationProvider.getSecondaryIntegrations(log);
 
@@ -203,13 +203,13 @@ export class AnnotationProvider {
 
         if (newFiles.length > 0) {
             const promises = newFiles.map((int) =>
-                p4.getFileHistory(underlying, { file: int.file, followBranches: true })
+                p4.getFileHistory(underlying, { file: int.file, followBranches: true }),
             );
             const newLogs = await Promise.all(promises);
             const expandedPromises = newLogs.map((log) =>
                 this.expandLogs(underlying, log, doneFiles).catch((err) =>
-                    Display.channel.appendLine(err)
-                )
+                    Display.channel.appendLine(err),
+                ),
             );
             const expanded = (await Promise.all(expandedPromises)).filter(isTruthy);
             return newLogs.concat(...expanded);
@@ -222,7 +222,7 @@ export class AnnotationProvider {
         change: string,
         logs: p4.FileLogItem[][],
         index: number,
-        totalRevisions: number
+        totalRevisions: number,
     ): LogInfo | undefined {
         for (const log of logs) {
             const found = log.findIndex((l) => l.chnum === change);
@@ -241,7 +241,7 @@ export class AnnotationProvider {
 
     static toMapByChnum(
         annotations: p4.Annotation[],
-        logs: p4.FileLogItem[][]
+        logs: p4.FileLogItem[][],
     ): Map<string, LogInfo> {
         const ret = new Map<string, LogInfo>();
 
@@ -265,7 +265,7 @@ export class AnnotationProvider {
                 "Error during annotation - could not find change information for " +
                     pluralise(notFound.length, "change") +
                     ": " +
-                    notFound.join(", ")
+                    notFound.join(", "),
             );
         }
 
@@ -318,7 +318,7 @@ function makeHoverMessage(
     underlying: vscode.Uri,
     change: p4.FileLogItem,
     latestChange: p4.FileLogItem,
-    prevChange?: p4.FileLogItem
+    prevChange?: p4.FileLogItem,
 ): vscode.MarkdownString {
     const links = md.makeAllLinks(underlying, change, latestChange, prevChange);
 
@@ -328,7 +328,7 @@ function makeHoverMessage(
             links +
             "\n\n" +
             md.convertToMarkdown(change.description),
-        true
+        true,
     );
     markdown.isTrusted = true;
 
@@ -342,7 +342,7 @@ function makeDecorationForChange(
     hoverMessage: vscode.MarkdownString,
     foregroundColor: vscode.ThemeColor,
     backgroundColor: vscode.ThemeColor,
-    columnWidth: number
+    columnWidth: number,
 ): DecorationWithoutRange {
     const alpha = ageRating;
     const color = `rgba(246, 106, 10, ${alpha})`;
@@ -380,7 +380,7 @@ interface ChangeDecoration {
 function makeDecorationsByChnum(
     underlying: vscode.Uri,
     latestChange: p4.FileLogItem,
-    logsByChnum: Map<string, LogInfo>
+    logsByChnum: Map<string, LogInfo>,
 ): Map<string, ChangeDecoration> {
     const backgroundColor = new vscode.ThemeColor("perforce.gutterBackgroundColor");
     const foregroundColor = new vscode.ThemeColor("perforce.gutterForegroundColor");
@@ -388,7 +388,7 @@ function makeDecorationsByChnum(
     const columnOptions = ColumnFormatter.parseColumns(
         vscode.workspace
             .getConfiguration("perforce")
-            .get<string[]>("annotate.gutterColumns", ["{#}revision|3"])
+            .get<string[]>("annotate.gutterColumns", ["{#}revision|3"]),
     );
 
     const columnWidth = ColumnFormatter.calculateTotalWidth(columnOptions);
@@ -400,13 +400,13 @@ function makeDecorationsByChnum(
         const summary = ColumnFormatter.makeSummaryText(
             change,
             latestChange,
-            columnOptions
+            columnOptions,
         );
         const hoverMessage = makeHoverMessage(
             underlying,
             change,
             latestChange,
-            prevChange
+            prevChange,
         );
         const top = makeDecorationForChange(
             log.ageRating,
@@ -415,7 +415,7 @@ function makeDecorationsByChnum(
             hoverMessage,
             foregroundColor,
             backgroundColor,
-            columnWidth
+            columnWidth,
         );
         const body = makeDecorationForChange(
             log.ageRating,
@@ -424,7 +424,7 @@ function makeDecorationsByChnum(
             hoverMessage,
             foregroundColor,
             backgroundColor,
-            columnWidth
+            columnWidth,
         );
         ret.set(change.chnum, { top, body });
     });
@@ -436,7 +436,7 @@ function getDecorations(
     underlying: vscode.Uri,
     annotations: (p4.Annotation | undefined)[],
     latestChange: p4.FileLogItem,
-    logsByChnum: Map<string, LogInfo>
+    logsByChnum: Map<string, LogInfo>,
 ): vscode.DecorationOptions[] {
     const decorations = makeDecorationsByChnum(underlying, latestChange, logsByChnum);
     return annotations
