@@ -1,7 +1,7 @@
-import { expect } from "chai";
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
+const expect = require('chai').expect;
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const sinonChai = require('sinon-chai');
 
 import * as vscode from "vscode";
 

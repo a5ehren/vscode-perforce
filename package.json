@@ -1,7 +1,7 @@
 {
-    "name": "perforce",
-    "displayName": "Perforce for VS Code",
-    "description": "(2020 Fork) Perforce integration with VS Code's SCM features",
+    "name": "perforce-2025",
+    "displayName": "Perforce for VS Code 2025",
+    "description": "(2025 Fork) Perforce integration with VS Code's SCM features",
     "version": "5.0.0",
     "publisher": "ebextensions",
     "license": "MIT",
@@ -24,7 +24,6 @@
     "engines": {
         "vscode": "^1.96.0"
     },
-    "enabledApiProposals": [],
     "keywords": [
         "vscode",
         "scm",
@@ -33,7 +32,7 @@
     ],
     "main": "./dist/extension",
     "activationEvents": [
-        "*"
+        "onStartupFinished"
     ],
     "contributes": {
         "viewsWelcome": [
@@ -2023,11 +2022,13 @@
     },
     "devDependencies": {
         "@arrows/composition": "^1.2.2",
+        "@eslint/js": "^9.23.0",
+        "@tsconfig/node-ts": "^23.6.1",
+        "@tsconfig/node20": "^20.1.5",
         "@types/chai": "^5.2.1",
         "@types/chai-as-promised": "^8.0.2",
         "@types/cross-spawn": "^6.0.6",
         "@types/glob": "^8.1.0",
-        "@types/javascript-time-ago": "^2.5.0",
         "@types/micromatch": "^4.0.9",
         "@types/mocha": "^10.0.10",
         "@types/node": "^20.x",
@@ -2042,7 +2043,6 @@
         "cypress-multi-reporters": "^2.0.5",
         "eslint": "^9.24.0",
         "eslint-config-prettier": "^10.1.1",
-        "eslint-plugin-prettier": "^5.2.6",
         "eslint-webpack-plugin": "^5.0.0",
         "glob": "^11.0.1",
         "javascript-time-ago": "^2.5.11",
@@ -2050,11 +2050,13 @@
         "mocha": "^11.1.0",
         "mocha-junit-reporter": "^2.2.1",
         "prettier": "^3.5.3",
+        "short-time-ago": "^3.0.0",
         "sinon": "^20.0.0",
         "sinon-chai": "^4.0.0",
         "ts-loader": "^9.5.2",
         "tsc-watch": "^6.2.1",
         "typescript": "^5.8.3",
+        "typescript-eslint": "^8.29.0",
         "vscode-test": "^1.6.1",
         "webpack": "^5.98.0",
         "webpack-cli": "^6.0.1"
@@ -2066,7 +2068,7 @@
         "watch": "webpack --mode development --watch",
         "eslint": "eslint --ext .js,.ts ./",
         "eslint-fix": "eslint --fix --ext .js,.ts ./",
-        "eslint-check": "eslint --print-config path/to/main.js | eslint-config-prettier-check",
+        "eslint-check": "eslint --print-config ./src/extension.ts && eslint-config-prettier ./src/extension.ts",
         "prettier-write": "prettier --write src/**/*.ts src/**/*.js",
         "compile": "tsc -p ./",
         "pretest": "yarn run compile",

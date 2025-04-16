@@ -291,7 +291,7 @@ export namespace PerforceService {
             };
         });
         const exec = new ShellExecution(cmd, quotedArgs, {
-            cwd: spawnArgs.cwd,
+            cwd: spawnArgs.cwd instanceof URL ? spawnArgs.cwd.toString() : spawnArgs.cwd,
             env,
         });
         try {
@@ -309,7 +309,7 @@ export namespace PerforceService {
                 }
             });
         } catch (err) {
-            responseCallback(err, "", "");
+            responseCallback(err instanceof Error ? err : new Error(String(err)), "", "");
         }
     }
 
