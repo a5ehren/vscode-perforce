@@ -29,7 +29,7 @@ export interface FileSystemEventProvider {
 }
 
 export default class FileSystemActions {
-    private static _eventRegistered: boolean = false;
+    private static _eventRegistered = false;
     private static _lastCheckedFileUri?: Uri = undefined;
     private static _lastSavedFileUri?: Uri = undefined;
 
@@ -128,8 +128,7 @@ export default class FileSystemActions {
         //Only try to open files open in the editor
         const editor = window.activeTextEditor;
         if (
-            !editor ||
-            !editor.document ||
+            !editor?.document ||
             editor.document.uri.toString() !== docUri.toString()
         ) {
             return;
@@ -164,7 +163,7 @@ export default class FileSystemActions {
             );
         } catch (err) {
             // still try to revert
-            Display.channel.appendLine(err);
+            Display.channel.appendLine(String(err));
         }
         return false;
     }

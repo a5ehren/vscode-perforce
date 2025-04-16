@@ -98,7 +98,7 @@ export async function diffFiles(
     leftFile: Uri,
     rightFile: Uri,
     title?: string,
-    preview: boolean = true
+    preview = true
 ) {
     // ensure we don't keep stacking left files
     const leftFileWithoutLeftFiles = PerforceUri.withArgs(leftFile, {
@@ -184,7 +184,7 @@ async function diffPreviousFromShelved(fromDoc: Uri, chnum: string) {
         limitToShelved: true,
         chnum,
     });
-    const rev = fstat[0]?.["workRev"];
+    const rev = fstat[0]?.workRev;
     if (rev) {
         const leftWithRev = PerforceUri.withArgs(fromDoc, {}, rev);
         await diffFiles(leftWithRev, fromDoc);
@@ -263,7 +263,7 @@ export async function diffNext(fromDoc: Uri) {
 export async function diffDefault(
     resource: Resource,
     diffType?: DiffType,
-    preview: boolean = true
+    preview = true
 ): Promise<void> {
     if (resource.FileType.base === FileType.BINARY) {
         const uri = PerforceUri.fromUri(resource.openUri, { command: "fstat" });

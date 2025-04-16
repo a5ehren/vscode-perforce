@@ -11,35 +11,35 @@ export const showQuickPickForFile = FileQuickPick.showQuickPickForFile;
 export function registerQuickPicks() {
     QuickPickProvider.registerQuickPickProvider(
         "file",
-        FileQuickPick.fileQuickPickProvider
+        FileQuickPick.fileQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "filerev",
-        FileQuickPick.fileRevisionQuickPickProvider
+        FileQuickPick.fileRevisionQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "filediff",
-        FileQuickPick.fileDiffQuickPickProvider
+        FileQuickPick.fileDiffQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "change",
-        ChangeQuickPick.changeQuickPickProvider
+        ChangeQuickPick.changeQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "unshelveChange",
-        ChangeQuickPick.unshelveChangeQuickPickProvider
+        ChangeQuickPick.unshelveChangeQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "changeResults",
-        ChangeSearchQuickPick.changeSearchQuickPickProvider
+        ChangeSearchQuickPick.changeSearchQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider("job", JobQuickPick.jobQuickPickProvider);
     QuickPickProvider.registerQuickPickProvider(
         "integ",
-        IntegrationQuickPick.integrationQuickPickProvider
+        IntegrationQuickPick.integrationQuickPickProvider,
     );
     QuickPickProvider.registerQuickPickProvider(
         "shelvedFile",
-        ShelvedFileQuickPick.shelvedFileQuickPickProvider
+        ShelvedFileQuickPick.shelvedFileQuickPickProvider,
     );
 }

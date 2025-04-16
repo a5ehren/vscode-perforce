@@ -2,8 +2,8 @@ import * as path from "path";
 
 import { runTests } from "vscode-test";
 
-type Env = { [key: string]: string };
-type Params = { [key: string]: string | boolean };
+type Env = Record<string, string>;
+type Params = Record<string, string | boolean>;
 
 async function main() {
     try {
@@ -26,12 +26,12 @@ async function main() {
 
         const env: Env = {};
         if (params["--display"]) {
-            env["DISPLAY"] = params["--display"] as string;
+            env.DISPLAY = params["--display"] as string;
             console.log(
                 "\nRUNNING WITH DISPLAY: " +
                     params["--display"] +
                     "\n\tNb: Before running with this mode, you should have run Xvfb, e.g.\n" +
-                    "\tXvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\n"
+                    "\tXvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\n",
             );
         }
 

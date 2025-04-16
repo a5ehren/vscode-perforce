@@ -10,12 +10,12 @@ export function asUri(uri: vscode.Uri | string) {
     return uri;
 }
 
-export type ActionableQuickPick = {
+export interface ActionableQuickPick {
     items: ActionableQuickPickItem[];
     excludeFromHistory?: boolean;
     placeHolder: string;
     recentKey?: string;
-};
+}
 
 export interface ActionableQuickPickProvider {
     provideActions: (...args: any) => Promise<ActionableQuickPick>;
@@ -27,12 +27,12 @@ export interface ActionableQuickPickItem extends vscode.QuickPickItem {
 
 const registeredQuickPickProviders = new Map<string, ActionableQuickPickProvider>();
 
-type QuickPickInstance = {
+interface QuickPickInstance {
     type: string;
     args: any[];
     description: string;
     recentKey: string;
-};
+}
 
 const quickPickStack: QuickPickInstance[] = [];
 // unique recent items by recentKey
@@ -40,7 +40,7 @@ let recents: QuickPickInstance[] = [];
 
 export function registerQuickPickProvider(
     type: string,
-    provider: ActionableQuickPickProvider
+    provider: ActionableQuickPickProvider,
 ) {
     registeredQuickPickProviders.set(type, provider);
 }
@@ -111,7 +111,7 @@ export async function showQuickPick(type: string, ...args: any[]) {
                 title: "Getting actions for quick pick",
                 cancellable: false,
             },
-            () => provider.provideActions(...args)
+            () => provider.provideActions(...args),
         );
 
         const instance: QuickPickInstance = {
@@ -136,7 +136,7 @@ export async function showQuickPick(type: string, ...args: any[]) {
                 matchOnDescription: true,
                 matchOnDetail: true,
                 placeHolder: actions.placeHolder,
-            }
+            },
         );
 
         const isNoOp = picked && !picked.performAction;
@@ -169,7 +169,7 @@ export function toRevString(startRev: string | undefined, endRev: string) {
 
 export function makeClipPick(
     name: string,
-    value: string | undefined
+    value: string | undefined,
 ): ActionableQuickPickItem {
     const val = value ?? "";
     return {

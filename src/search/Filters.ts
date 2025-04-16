@@ -13,61 +13,66 @@ import * as p4 from "../api/PerforceApi";
 import { Display } from "../Display";
 import { MementoItem, MementoKeys } from "../MementoItem";
 
-type SearchFilterValue<T> = {
+interface SearchFilterValue<T> {
     label: string;
     value?: T;
-};
+}
 
-type SearchFilter = {
+interface SearchFilter {
     name: string;
     placeHolder: string;
     defaultText: string;
-};
+}
 
-export type Filters = {
+export interface Filters {
     user?: string;
     client?: string;
     status?: ChangelistStatus;
     files?: PerforceFile[];
-};
+}
 
 type StringMemento = MementoItem<SearchFilterValue<string>>;
 
 type PickWithValue<T> = vscode.QuickPickItem & { value?: T };
 
-export abstract class FilterItem<T> extends SelfExpandingTreeItem<any> {
+export abstract class FilterItem<T> extends SelfExpandingTreeItem<FilterItem<T>> {
     private _selected?: SearchFilterValue<T>;
     private _didChangeFilter: vscode.EventEmitter<void>;
+    public command: vscode.Command;
+    public tooltip: string;
+    public contextValue: string;
+
     get onDidChangeFilter() {
         return this._didChangeFilter.event;
     }
 
     constructor(
         protected readonly _filter: SearchFilter,
-        private _mementoItem: MementoItem<SearchFilterValue<T>>
+        private _mementoItem: MementoItem<SearchFilterValue<T>>,
     ) {
         super(_filter.name + ":", vscode.TreeItemCollapsibleState.None);
         this._didChangeFilter = new vscode.EventEmitter();
         this._subscriptions.push(this._didChangeFilter);
         this.setValueWithoutEvent(_mementoItem.value);
-    }
 
-    get command(): vscode.Command {
-        return {
+        this.command = {
             command: "perforce.changeSearch.setFilter",
             title: "Set " + this._filter.name,
             arguments: [this],
         };
+        this.tooltip = this._filter.placeHolder;
+        this.contextValue =
+            this._selected?.value !== undefined ? "filterItem-val" : "filterItem-empty";
     }
 
     private setValueWithoutEvent(value?: SearchFilterValue<T>) {
         this._selected = value;
-        if (value && value.value !== undefined) {
+        if (value?.value !== undefined) {
             this.description = this._selected?.label;
         } else {
             this.description = "<" + this._filter.defaultText + ">";
         }
-        this._mementoItem.save(value);
+        void this._mementoItem.save(value);
     }
 
     private setValue(value?: SearchFilterValue<T>) {
@@ -98,16 +103,6 @@ export abstract class FilterItem<T> extends SelfExpandingTreeItem<any> {
         return this._selected?.value;
     }
 
-    get tooltip() {
-        return this._filter.placeHolder;
-    }
-
-    get contextValue() {
-        return this._selected?.value !== undefined
-            ? "filterItem-val"
-            : "filterItem-empty";
-    }
-
     reset(fireFilterUpdate = true) {
         this.setValue(undefined);
         this.didChange();
@@ -124,7 +119,7 @@ class StatusFilter extends FilterItem<ChangelistStatus> {
                 placeHolder: "Filter by changelist status",
                 defaultText: "all",
             },
-            memento
+            memento,
         );
     }
 
@@ -173,7 +168,7 @@ class StatusFilter extends FilterItem<ChangelistStatus> {
 async function showFilterTextInput(
     placeHolder: string,
     currentValue: string,
-    getSearchResults: (value: string) => Promise<string[]>
+    getSearchResults: (value: string) => Promise<string[]>,
 ): Promise<SearchFilterValue<string> | undefined> {
     const value = await vscode.window.showInputBox({
         prompt: placeHolder + " (use * for wildcards)",
@@ -195,7 +190,7 @@ async function showFilterTextInput(
 async function showSearchResults(
     filter: string,
     placeHolder: string,
-    getSearchResults: (value: string) => Promise<string[]>
+    getSearchResults: (value: string) => Promise<string[]>,
 ): Promise<SearchFilterValue<string> | undefined> {
     const results = await getSearchResults(filter);
     if (results.length < 1) {
@@ -222,7 +217,7 @@ async function pickFromProviderOrCustom(
     client: ClientRoot | undefined,
     clientValue: string | undefined,
     readableKey: string,
-    getSearchResults: (value: string) => Promise<string[]>
+    getSearchResults: (value: string) => Promise<string[]>,
 ) {
     const current: PickWithValue<SearchFilterValue<string>> | undefined =
         client && clientValue !== undefined
@@ -271,34 +266,37 @@ async function pickFromProviderOrCustom(
                     },
                 },
             ];
-        }
+        },
     );
 
     if (chosen?.description === customDescription && !chosen.value?.value) {
         return showFilterTextInput(
             "Enter a " + readableKey,
             currentValue ?? "",
-            getSearchResults
+            getSearchResults,
         );
     } else if (chosen?.label.startsWith("$(search)")) {
         return showSearchResults(
             chosen.value?.value ?? "*",
             placeHolder,
-            getSearchResults
+            getSearchResults,
         );
     }
     return chosen?.value;
 }
 
 class UserFilter extends FilterItem<string> {
-    constructor(private _provider: ProviderSelection, memento: StringMemento) {
+    constructor(
+        private _provider: ProviderSelection,
+        memento: StringMemento,
+    ) {
         super(
             {
                 name: "User",
                 placeHolder: "Filter by username",
                 defaultText: "any",
             },
-            memento
+            memento,
         );
     }
 
@@ -319,20 +317,23 @@ class UserFilter extends FilterItem<string> {
                     userFilters: [value.replace("*", "...")],
                 });
                 return users.map((u) => u.user);
-            }
+            },
         );
     }
 }
 
 class ClientFilter extends FilterItem<string> {
-    constructor(private _provider: ProviderSelection, memento: StringMemento) {
+    constructor(
+        private _provider: ProviderSelection,
+        memento: StringMemento,
+    ) {
         super(
             {
                 name: "Client",
                 placeHolder: "Filter by perforce client",
                 defaultText: "any",
             },
-            memento
+            memento,
         );
     }
 
@@ -353,23 +354,19 @@ class ClientFilter extends FilterItem<string> {
                     nameFilter: value.replace("*", "..."),
                 });
                 return clients.map((c) => c.client);
-            }
+            },
         );
     }
 }
 
-export class FileFilterValue extends SelfExpandingTreeItem<any> {
+export class FileFilterValue extends SelfExpandingTreeItem<FileFilterValue> {
     constructor(path: string) {
         super(path);
     }
 
-    get contextValue() {
-        return "fileFilter";
-    }
+    public contextValue = "fileFilter";
 
-    get iconPath() {
-        return new vscode.ThemeIcon("file");
-    }
+    public iconPath = new vscode.ThemeIcon("file");
 
     async edit() {
         const value = await vscode.window.showInputBox({
@@ -388,13 +385,12 @@ export class FileFilterValue extends SelfExpandingTreeItem<any> {
     }
 }
 
-class FileFilterAdd extends SelfExpandingTreeItem<any> {
+export class FileFilterAdd extends SelfExpandingTreeItem<FileFilterAdd> {
+    public command: vscode.Command;
+
     constructor(private _command: vscode.Command) {
         super("Add path...");
-    }
-
-    get command() {
-        return this._command;
+        this.command = _command;
     }
 }
 
@@ -408,7 +404,7 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
 
     constructor(
         private _provider: ProviderSelection,
-        private _memento: MementoItem<string[]>
+        private _memento: MementoItem<string[]>,
     ) {
         super("Files", vscode.TreeItemCollapsibleState.Expanded, {
             reverseChildren: true,
@@ -419,7 +415,7 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
                 command: "perforce.changeSearch.addFileFilter",
                 arguments: [this],
                 title: "Add file filter",
-            })
+            }),
         );
         this._didChangeFilter = new vscode.EventEmitter();
         this._subscriptions.push(this._didChangeFilter);
@@ -428,13 +424,11 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
 
     private loadFromMemento() {
         this._memento.value?.forEach((saved) =>
-            this.addSelectedFilterWithoutEvent(new FileFilterValue(saved))
+            this.addSelectedFilterWithoutEvent(new FileFilterValue(saved)),
         );
     }
 
-    get contextValue() {
-        return "fileFilters";
-    }
+    public contextValue = "fileFilters";
 
     private async getFilePathFromClipboard() {
         const clipValue = (await vscode.env.clipboard.readText())?.split("\n")[0];
@@ -527,7 +521,7 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
             .filter(isTruthy)
             .filter(
                 (opt) =>
-                    !existingChildren.some((existing) => existing.label === opt.value)
+                    !existingChildren.some((existing) => existing.label === opt.value),
             );
 
         const customDescription = "Type a path";
@@ -549,7 +543,7 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
                         value: value,
                     },
                 ];
-            }
+            },
         );
 
         if (!chosen) {
@@ -579,7 +573,7 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
             val.onChanged(() => {
                 this._didChangeFilter.fire();
                 this.saveDefault();
-            })
+            }),
         );
     }
 
@@ -614,11 +608,11 @@ export class FileFilterRoot extends SelfExpandingTreeItem<
     }
 
     private saveDefault() {
-        this._memento.save(this.value);
+        void this._memento.save(this.value);
     }
 }
 
-export class FilterRootItem extends SelfExpandingTreeItem<any> {
+export class FilterRootItem extends SelfExpandingTreeItem<FilterItem<unknown> | FileFilterRoot> {
     private _userFilter: UserFilter;
     private _clientFilter: ClientFilter;
     private _statusFilter: StatusFilter;
@@ -632,22 +626,22 @@ export class FilterRootItem extends SelfExpandingTreeItem<any> {
     constructor(provider: ProviderSelection, memento: vscode.Memento) {
         super("Filters", vscode.TreeItemCollapsibleState.Expanded);
         this._statusFilter = new StatusFilter(
-            new MementoItem(MementoKeys.SEARCH_STATUS, memento)
+            new MementoItem(MementoKeys.SEARCH_STATUS, memento),
         );
         this.addChild(this._statusFilter);
         this._userFilter = new UserFilter(
             provider,
-            new MementoItem(MementoKeys.SEARCH_USER, memento)
+            new MementoItem(MementoKeys.SEARCH_USER, memento),
         );
         this.addChild(this._userFilter);
         this._clientFilter = new ClientFilter(
             provider,
-            new MementoItem(MementoKeys.SEARCH_CLIENT, memento)
+            new MementoItem(MementoKeys.SEARCH_CLIENT, memento),
         );
         this.addChild(this._clientFilter);
         this._fileFilter = new FileFilterRoot(
             provider,
-            new MementoItem(MementoKeys.SEARCH_FILES, memento)
+            new MementoItem(MementoKeys.SEARCH_FILES, memento),
         );
         this.addChild(this._fileFilter);
         this._didChangeFilters = new vscode.EventEmitter();
@@ -662,11 +656,11 @@ export class FilterRootItem extends SelfExpandingTreeItem<any> {
         this._subscriptions.push(this._didChangeFilters);
     }
 
-    subscribeToChanges(filters: (FilterItem<any> | FileFilterRoot)[]) {
+    subscribeToChanges(filters: (FilterItem<unknown> | FileFilterRoot)[]) {
         filters.forEach((f) =>
             this._subscriptions.push(
-                f.onDidChangeFilter(() => this._didChangeFilters.fire())
-            )
+                f.onDidChangeFilter(() => this._didChangeFilters.fire()),
+            ),
         );
     }
 
@@ -692,13 +686,11 @@ export class FilterRootItem extends SelfExpandingTreeItem<any> {
 
 export function makeFilterLabelText(filters: Filters, resultCount: number) {
     const parts = [
-        filters.status ? filters.status : undefined,
-        filters.user ? "User: " + filters.user : undefined,
-        filters.client ? "Client: " + filters.client : undefined,
-        filters.files && filters.files.length > 0
-            ? pluralise(filters.files.length, "path")
-            : undefined,
-    ].filter(isTruthy);
+        filters.status,
+        filters.user && `User: ${filters.user}`,
+        filters.client && `Client: ${filters.client}`,
+        filters.files && filters.files.length > 0 && pluralise(filters.files.length, "path"),
+    ].filter(Boolean);
     const filterText = parts.length > 0 ? parts.join("] [") : "no filters";
     return (
         "(" +

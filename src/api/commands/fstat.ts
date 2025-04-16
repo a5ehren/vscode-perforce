@@ -70,5 +70,5 @@ export async function getFstatInfo(resource: vscode.Uri, options: FstatOptions) 
  */
 export async function getFstatInfoMapped(resource: vscode.Uri, options: FstatOptions) {
     const all = await getFstatInfo(resource, options);
-    return options.depotPaths.map((file) => all.find((fs) => fs["depotFile"] === file));
+    return options.depotPaths.map((file) => all.find((fs) => fs.depotFile === file));
 }

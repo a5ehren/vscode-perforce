@@ -1,17 +1,20 @@
-import { expect } from "chai";
-
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
-
+const chai = require('chai');
+const { expect } = chai;
 import * as sinon from "sinon";
 import { debounce, DebouncedFunction } from "../../../Debounce";
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+let chaiAsPromised: any;
+let sinonChai: any;
+
+before(async () => {
+    chaiAsPromised = (await import("chai-as-promised")).default;
+    sinonChai = (await import("sinon-chai")).default;
+    chai.use(sinonChai);
+    chai.use(chaiAsPromised);
+});
 
 function timeout(ms: number) {
-    return new Promise((res) => {
+    return new Promise<void>((res) => {
         setTimeout(() => {
             res();
         }, ms);

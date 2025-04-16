@@ -443,11 +443,11 @@ export class PerforceSCMProvider {
     }
 
     private static isSourceControl(arg: any): arg is SourceControl {
-        return arg && arg.inputBox;
+        return arg?.inputBox;
     }
 
     private static GetInstance(
-        sourceControl?: SourceControl | undefined
+        sourceControl?: SourceControl  
     ): PerforceSCMProvider | undefined {
         if (!this.isSourceControl(sourceControl)) {
             return PerforceSCMProvider.instances?.[0];
@@ -540,7 +540,7 @@ export class PerforceSCMProvider {
     public static async OpenFile(...resourceStates: SourceControlResourceState[]) {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         const preview = selection.length === 1;
         const promises = selection.map((resource) => {
             return commands.executeCommand<void>("vscode.open", resource.openUri, {
@@ -554,7 +554,7 @@ export class PerforceSCMProvider {
     public static async Open(...resourceStates: SourceControlResourceState[]) {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         const promises = [];
         for (const resource of selection) {
             promises.push(
@@ -567,7 +567,7 @@ export class PerforceSCMProvider {
     public static async OpenvShelved(...resourceStates: SourceControlResourceState[]) {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         const promises = [];
         for (const resource of selection) {
             promises.push(
@@ -654,7 +654,7 @@ export class PerforceSCMProvider {
     ) {
         const resources = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         await resources[0].model.SubmitSelectedFile(resources);
     }
 
@@ -711,14 +711,14 @@ export class PerforceSCMProvider {
     public static async ResolveFiles(...resourceStates: SourceControlResourceState[]) {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         await selection[0]?.model.ResolveFiles(selection);
     }
 
     public static async ReResolveFiles(...resourceStates: SourceControlResourceState[]) {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         await selection[0]?.model.ReResolveFiles(selection);
     }
 
@@ -755,7 +755,7 @@ export class PerforceSCMProvider {
     ): Promise<void> {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         await selection[0]?.model.ShelveMultiple(selection);
     }
 
@@ -764,7 +764,7 @@ export class PerforceSCMProvider {
     ): Promise<void> {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         await selection[0]?.model.UnshelveMultiple(selection);
     }
 
@@ -773,7 +773,7 @@ export class PerforceSCMProvider {
     ): Promise<void> {
         const selection = resourceStates.filter(
             (s) => s instanceof Resource
-        ) as Resource[];
+        );
         const promises = selection.map((resource) =>
             resource.model.DeleteShelvedFile(resource)
         );
@@ -880,7 +880,7 @@ export class PerforceSCMProvider {
     private static async open(
         resource: Resource,
         diffType?: DiffProvider.DiffType,
-        preview: boolean = true
+        preview = true
     ): Promise<void> {
         if (resource.FileType.base === FileType.BINARY) {
             const uri = PerforceUri.fromUri(resource.openUri, { command: "fstat" });

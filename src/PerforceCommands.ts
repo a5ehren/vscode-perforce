@@ -90,7 +90,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -102,7 +102,9 @@ export namespace PerforceCommands {
             await p4.add(fileUri, { files: [fileUri] });
             Display.showMessage("File opened for add");
             Display.updateEditor();
-        } catch {}
+        } catch (err) {
+            Display.showError(String(err));
+        }
         PerforceSCMProvider.RefreshAll();
     }
 
@@ -112,7 +114,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -135,7 +137,7 @@ export namespace PerforceCommands {
                 );
             } catch (err) {
                 // ensure save always happens even if something goes wrong
-                Display.showError(err);
+                Display.showError(String(err));
             }
 
             await activeFile.save();
@@ -147,7 +149,9 @@ export namespace PerforceCommands {
             await p4.edit(fileUri, { files: [fileUri] });
             Display.showMessage("File opened for edit");
             Display.updateEditor();
-        } catch {}
+        } catch (err) {
+            Display.showError(String(err));
+        }
         PerforceSCMProvider.RefreshAll();
     }
 
@@ -157,7 +161,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -184,7 +188,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -292,7 +296,9 @@ export namespace PerforceCommands {
             await p4.sync(file, { files: [file] });
             Display.showMessage("File Synced");
             didChangeHaveRev(file);
-        } catch {}
+        } catch (err) {
+            Display.showError(String(err));
+        }
         PerforceSCMProvider.RefreshAll();
     }
 
@@ -315,7 +321,9 @@ export namespace PerforceCommands {
                 await p4.sync(file, { files: [chosen] });
                 Display.showMessage("File Synced");
                 didChangeHaveRev(file);
-            } catch {}
+            } catch (err) {
+                Display.showError(String(err));
+            }
             PerforceSCMProvider.RefreshAll();
         }
     }
@@ -344,7 +352,7 @@ export namespace PerforceCommands {
             await p4.edit.ignoringAndHidingStdErr(file, { files: [fromWild] });
             await p4.move(file, { fromToFile: [fromWild, toWild] });
         } catch (err) {
-            Display.showImportantError(err.toString());
+            Display.showImportantError(String(err));
         }
     }
 
@@ -353,7 +361,7 @@ export namespace PerforceCommands {
             await p4.edit.ignoringAndHidingStdErr(file, { files: [file] });
             await p4.move(file, { fromToFile: [file, newFsPath] });
         } catch (err) {
-            Display.showImportantError(err.toString());
+            Display.showImportantError(String(err));
         }
     }
 
@@ -395,7 +403,7 @@ export namespace PerforceCommands {
             try {
                 await withExplorerProgress(() => Promise.all(promises));
             } catch (err) {
-                Display.showImportantError(err.toString());
+                Display.showImportantError(String(err));
             }
             PerforceSCMProvider.RefreshAll();
         }
@@ -420,7 +428,7 @@ export namespace PerforceCommands {
                     await window.showTextDocument(Uri.file(newPath));
                 }
             } catch (err) {
-                Display.showImportantError(err.toString());
+                Display.showImportantError(String(err));
             }
             PerforceSCMProvider.RefreshAll();
         }
@@ -443,11 +451,11 @@ export namespace PerforceCommands {
         return [resource, ...allUris.filter((f) => f.fsPath !== resource.fsPath)];
     }
 
-    type FileAndDir = {
+    interface FileAndDir {
         file: Uri;
         isDir: boolean;
         dir: Uri;
-    };
+    }
 
     async function mapToFilesByDir(files: Uri[]): Promise<FileAndDir[]> {
         return await Promise.all(
@@ -483,7 +491,7 @@ export namespace PerforceCommands {
                     );
                 } catch (err) {
                     if (!options?.hideSubErrors) {
-                        Display.showImportantError(err);
+                        Display.showImportantError(String(err));
                     }
                     throw err;
                 } finally {
@@ -590,7 +598,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -620,7 +628,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -633,9 +641,7 @@ export namespace PerforceCommands {
     }
 
     async function diffPrevious(fromDoc?: Uri) {
-        if (!fromDoc) {
-            fromDoc = window.activeTextEditor?.document.uri;
-        }
+        fromDoc ??= window.activeTextEditor?.document.uri;
         if (!fromDoc) {
             Display.showError("No file to diff");
             return false;
@@ -653,9 +659,7 @@ export namespace PerforceCommands {
     }
 
     async function diffNext(fromDoc?: Uri) {
-        if (!fromDoc) {
-            fromDoc = window.activeTextEditor?.document.uri;
-        }
+        fromDoc ??= window.activeTextEditor?.document.uri;
         if (!fromDoc) {
             Display.showError("No file to diff");
             return false;
@@ -673,7 +677,7 @@ export namespace PerforceCommands {
             return;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return;
         }
 
@@ -717,7 +721,7 @@ export namespace PerforceCommands {
         let resource = workspace.workspaceFolders[0].uri;
         if (workspace.workspaceFolders.length > 1) {
             // try to find the proper workspace
-            if (window.activeTextEditor && window.activeTextEditor.document) {
+            if (window.activeTextEditor?.document) {
                 const wksFolder = workspace.getWorkspaceFolder(
                     window.activeTextEditor.document.uri
                 );

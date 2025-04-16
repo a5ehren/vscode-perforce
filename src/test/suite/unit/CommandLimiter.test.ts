@@ -1,16 +1,19 @@
-import { expect } from "chai";
-
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
-
+const chai = require('chai');
+const { expect } = chai;
 import * as sinon from "sinon";
 import { Queue, CommandLimiter } from "../../../CommandLimiter";
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+let chaiAsPromised: any;
+let sinonChai: any;
 
-type Hello = { hello: string };
+before(async () => {
+    chaiAsPromised = (await import("chai-as-promised")).default;
+    sinonChai = (await import("sinon-chai")).default;
+    chai.use(sinonChai);
+    chai.use(chaiAsPromised);
+});
+
+interface Hello { hello: string }
 
 describe("Command Limiter (unit)", () => {
     describe("Queue", () => {
@@ -200,7 +203,7 @@ describe("Command Limiter (unit)", () => {
 
             const p1 = cl.submit(
                 (c) =>
-                    new Promise((res) =>
+                    new Promise<void>((res) =>
                         setTimeout(() => {
                             c1(c);
                             res();
@@ -213,7 +216,7 @@ describe("Command Limiter (unit)", () => {
 
             const p2 = cl.submit(
                 (c) =>
-                    new Promise((res) =>
+                    new Promise<void>((res) =>
                         setTimeout(() => {
                             c2(c);
                             res();

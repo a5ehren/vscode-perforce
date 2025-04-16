@@ -18,12 +18,12 @@ const clientsFlags = flagMapper<ClientsOptions>([
 
 const clientsCommand = makeSimpleCommand("clients", clientsFlags);
 
-export type ClientInfo = {
+export interface ClientInfo {
     client: string;
     date: string;
     root: string;
     description: string;
-};
+}
 
 function parseClientLine(line: string) {
     const matches = /^Client (\S*) (\S*) root (.*) '(.*)'$/.exec(line);

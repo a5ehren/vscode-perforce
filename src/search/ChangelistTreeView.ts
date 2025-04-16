@@ -33,14 +33,14 @@ import { operationCreatesFile, GetStatus, operationDeletesFile } from "../scm/St
 import * as DiffProvider from "../DiffProvider";
 import { MementoItem, MementoKeys } from "../MementoItem";
 
-class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
+class ChooseProviderTreeItem extends SelfExpandingTreeItem<ChooseProviderTreeItem> {
     constructor(private _providerSelection: ProviderSelection) {
         super("Context:", vscode.TreeItemCollapsibleState.None);
 
         this._subscriptions.push(
             PerforceSCMProvider.onDidChangeScmProviders(
-                this.onDidChangeScmProviders.bind(this)
-            )
+                this.onDidChangeScmProviders.bind(this),
+            ),
         );
         this._subscriptions.push(
             _providerSelection.onDidChangeProvider((client) => {
@@ -50,10 +50,19 @@ class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
                     this.description = "<choose a perforce instance>";
                 }
                 this.didChange();
-            })
+            }),
         );
 
         this.setClient(PerforceSCMProvider.clientRoots[0]);
+
+        this.iconPath = new vscode.ThemeIcon("account");
+        this.command = {
+            command: "perforce.changeSearch.chooseProvider",
+            title: "Choose Provider",
+            tooltip: "Choose a perforce instance for performing the search",
+            arguments: [this],
+        };
+        this.tooltip = "Choose a perforce instance to use as context for the search";
     }
 
     get selectedClient() {
@@ -71,19 +80,6 @@ class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
         ) {
             this.setClient(PerforceSCMProvider.clientRoots[0]);
         }
-    }
-
-    get iconPath() {
-        return new vscode.ThemeIcon("account");
-    }
-
-    public get command(): vscode.Command {
-        return {
-            command: "perforce.changeSearch.chooseProvider",
-            title: "Choose Provider",
-            tooltip: "Choose a perforce instance for performing the search",
-            arguments: [this],
-        };
     }
 
     public async chooseProvider() {
@@ -105,20 +101,25 @@ class ChooseProviderTreeItem extends SelfExpandingTreeItem<any> {
             this.setClient(chosen.client);
         }
     }
-
-    public tooltip = "Choose a perforce instance to use as context for the search";
 }
 
-class GoToChangelist extends SelfExpandingTreeItem<any> {
+class GoToChangelist extends SelfExpandingTreeItem<GoToChangelist> {
     constructor(private _chooseProvider: ChooseProviderTreeItem) {
         super("Go to changelist...");
+
+        this.command = {
+            command: "perforce.changeSearch.goToChangelist",
+            arguments: [this],
+            title: "Go to changelist",
+        };
+        this.iconPath = new vscode.ThemeIcon("rocket");
     }
 
     async execute() {
         const selectedClient = this._chooseProvider.selectedClient;
         if (!selectedClient) {
             Display.showImportantError(
-                "Please choose a context before entering a changelist number"
+                "Please choose a context before entering a changelist number",
             );
             throw new Error("No context for changelist search");
         }
@@ -126,32 +127,29 @@ class GoToChangelist extends SelfExpandingTreeItem<any> {
         const chnum = await Display.requestChangelistNumber();
 
         if (chnum !== undefined) {
-            showQuickPickForChangelist(selectedClient.configSource, chnum);
+            void showQuickPickForChangelist(selectedClient.configSource, chnum);
         }
-    }
-
-    get command(): vscode.Command {
-        return {
-            command: "perforce.changeSearch.goToChangelist",
-            arguments: [this],
-            title: "Go to changelist",
-        };
-    }
-
-    get iconPath() {
-        return new vscode.ThemeIcon("rocket");
     }
 }
 
-class RunSearch extends SelfExpandingTreeItem<any> {
+class RunSearch extends SelfExpandingTreeItem<RunSearch> {
     private _autoRefresh: boolean;
 
     constructor(
         private _root: ChangelistTreeRoot,
-        private _memento: MementoItem<boolean>
+        private _memento: MementoItem<boolean>,
     ) {
         super(RunSearch.makeLabel(!!_memento.value));
         this._autoRefresh = !!_memento.value;
+
+        this.command = {
+            command: "perforce.changeSearch.run",
+            arguments: [this._root],
+            title: "Run Search",
+        };
+        this.iconPath = new vscode.ThemeIcon("search");
+        this.contextValue = this._autoRefresh ? "searchNow-auto" : "searchNow-manual";
+        this.tooltip = "Apply current filters";
     }
 
     private static makeLabel(autoRefresh: boolean) {
@@ -166,48 +164,25 @@ class RunSearch extends SelfExpandingTreeItem<any> {
         this._autoRefresh = autoRefresh;
         this.label = RunSearch.makeLabel(this._autoRefresh);
         this.didChange();
-        this._memento.save(autoRefresh);
+        void this._memento.save(autoRefresh);
     }
-
-    get command(): vscode.Command {
-        return {
-            command: "perforce.changeSearch.run",
-            arguments: [this._root],
-            title: "Run Search",
-        };
-    }
-
-    get iconPath() {
-        return new vscode.ThemeIcon("search");
-    }
-
-    get contextValue() {
-        return this._autoRefresh ? "searchNow-auto" : "searchNow-manual";
-    }
-
-    tooltip = "Apply current filters";
 }
 
 interface Diffable {
     perforceUri: vscode.Uri;
 }
 
-class SearchResultShelvedFile extends SelfExpandingTreeItem<any> implements Diffable {
+class SearchResultShelvedFile extends SelfExpandingTreeItem<SearchResultShelvedFile> implements Diffable {
     constructor(
         private _resource: vscode.Uri,
         private _file: p4.DepotFileOperation,
-        private _chnum: string
+        private _chnum: string,
     ) {
         super(_file.depotPath + "#" + _file.revision);
         this.description = _file.operation;
-    }
 
-    get iconPath() {
-        return new vscode.ThemeIcon(getOperationIcon(this._file.operation));
-    }
-
-    get command() {
-        return {
+        this.iconPath = new vscode.ThemeIcon(getOperationIcon(this._file.operation));
+        this.command = {
             command: "perforce.showQuickPick",
             arguments: [
                 "shelvedFile",
@@ -219,6 +194,10 @@ class SearchResultShelvedFile extends SelfExpandingTreeItem<any> implements Diff
             ],
             title: "Show shelved file quick pick",
         };
+        this.contextValue =
+            "fileResult-shelved" +
+            (this.canDiff ? "-diffable" : "") +
+            (this.canOpen ? "-openable" : "");
     }
 
     get canDiff() {
@@ -237,15 +216,7 @@ class SearchResultShelvedFile extends SelfExpandingTreeItem<any> implements Diff
         return PerforceUri.fromDepotPath(
             this._resource,
             this._file.depotPath,
-            "@=" + this._chnum
-        );
-    }
-
-    get contextValue() {
-        return (
-            "fileResult-shelved" +
-            (this.canDiff ? "-diffable" : "") +
-            (this.canOpen ? "-openable" : "")
+            "@=" + this._chnum,
         );
     }
 }
@@ -254,46 +225,43 @@ class SearchResultShelvedSubTree extends SelfExpandingTreeItem<SearchResultShelv
     constructor(resource: vscode.Uri, change: DescribedChangelist) {
         super(
             "Shelved Files (" + change.shelvedFiles.length + ")",
-            vscode.TreeItemCollapsibleState.Collapsed
+            vscode.TreeItemCollapsibleState.Collapsed,
         );
         const files = change.shelvedFiles.map(
-            (file) => new SearchResultShelvedFile(resource, file, change.chnum)
+            (file) => new SearchResultShelvedFile(resource, file, change.chnum),
         );
         files.forEach((file) => this.addChild(file));
-    }
 
-    get iconPath() {
-        return new vscode.ThemeIcon("files");
+        this.iconPath = new vscode.ThemeIcon("files");
     }
 }
 
-class SearchResultFile extends SelfExpandingTreeItem<any> implements Diffable {
+class SearchResultFile extends SelfExpandingTreeItem<SearchResultFile> implements Diffable {
     constructor(
         private _resource: vscode.Uri,
         private _file: p4.DepotFileOperation,
-        private _change: DescribedChangelist
+        private _change: DescribedChangelist,
     ) {
         super(_file.depotPath + "#" + _file.revision);
         this.description = _file.operation;
-    }
 
-    get iconPath() {
-        return new vscode.ThemeIcon(getOperationIcon(this._file.operation));
-    }
-
-    get command() {
-        return {
+        this.iconPath = new vscode.ThemeIcon(getOperationIcon(this._file.operation));
+        this.command = {
             command: "perforce.showQuickPick",
             arguments: [
                 "file",
                 PerforceUri.fromDepotPath(
                     PerforceUri.getUsableWorkspace(this._resource) ?? this._resource,
                     this._file.depotPath,
-                    this._file.revision
+                    this._file.revision,
                 ).toString(),
             ],
             title: "Show file quick pick",
         };
+        this.contextValue =
+            "fileResult" +
+            (this.canDiff ? "-diffable" : "") +
+            (this.canOpen ? "-openable" : "");
     }
 
     get canDiff() {
@@ -311,15 +279,7 @@ class SearchResultFile extends SelfExpandingTreeItem<any> implements Diffable {
         return PerforceUri.fromDepotPath(
             this._resource,
             this._file.depotPath,
-            this._file.revision
-        );
-    }
-
-    get contextValue() {
-        return (
-            "fileResult" +
-            (this.canDiff ? "-diffable" : "") +
-            (this.canOpen ? "-openable" : "")
+            this._file.revision,
         );
     }
 }
@@ -327,12 +287,23 @@ class SearchResultFile extends SelfExpandingTreeItem<any> implements Diffable {
 class SearchResultItem extends SelfExpandingTreeItem<
     SearchResultFile | SearchResultShelvedSubTree
 > {
-    constructor(private _resource: vscode.Uri, private _change: ChangeInfo) {
+    constructor(
+        private _resource: vscode.Uri,
+        private _change: ChangeInfo,
+    ) {
         super(
             _change.chnum + ": " + _change.description.join(" ").slice(0, 32),
-            vscode.TreeItemCollapsibleState.None
+            vscode.TreeItemCollapsibleState.None,
         );
         this.description = _change.user;
+
+        this.iconPath = new vscode.ThemeIcon(this._change.isPending ? "tools" : "check");
+        this.command = {
+            command: "perforce.showQuickPick",
+            arguments: ["change", this._resource.toString(), this._change.chnum],
+            title: "Show changelist quick pick",
+        };
+        this.tooltip = this._change.description.join(" ");
     }
 
     get chnum() {
@@ -342,7 +313,7 @@ class SearchResultItem extends SelfExpandingTreeItem<
     addDetails(detail: DescribedChangelist) {
         this.clearChildren();
         const files = detail.affectedFiles.map(
-            (file) => new SearchResultFile(this._resource, file, detail)
+            (file) => new SearchResultFile(this._resource, file, detail),
         );
         files.forEach((file) => this.addChild(file));
         const curState = this.collapsibleState;
@@ -361,22 +332,6 @@ class SearchResultItem extends SelfExpandingTreeItem<
             this.insertChild(new SearchResultShelvedSubTree(this._resource, detail));
         }
     }
-
-    get iconPath() {
-        return new vscode.ThemeIcon(this._change.isPending ? "tools" : "check");
-    }
-
-    get command(): vscode.Command {
-        return {
-            command: "perforce.showQuickPick",
-            arguments: ["change", this._resource.toString(), this._change.chnum],
-            title: "Show changelist quick pick",
-        };
-    }
-
-    get tooltip() {
-        return this._change.description.join(" ");
-    }
 }
 
 interface Pinnable extends vscode.Disposable {
@@ -385,20 +340,26 @@ interface Pinnable extends vscode.Disposable {
     pinned: boolean;
 }
 
-function isPinnable(obj: any): obj is Pinnable {
-    return obj && obj.pin && obj.unpin;
+function isPinnable(obj: unknown): obj is Pinnable {
+    return typeof obj === 'object' && obj !== null && 'pin' in obj && 'unpin' in obj;
 }
 
 abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> {
-    private _isPinned: boolean = false;
+    private _isPinned = false;
     private _results: ChangeInfo[];
 
-    constructor(private _resource: vscode.Uri, results: ChangeInfo[], label: string) {
+    constructor(
+        private _resource: vscode.Uri,
+        results: ChangeInfo[],
+        label: string,
+    ) {
         super(label, vscode.TreeItemCollapsibleState.Expanded);
         this._results = dedupe(results, "chnum"); // with multiple file paths, p4 returns duplicates
         const children = this._results.map((r) => new SearchResultItem(this.resource, r));
         children.forEach((child) => this.addChild(child));
-        this.populateChangeDetails();
+        void this.populateChangeDetails();
+
+        this.contextValue = this._isPinned ? "results-pinned" : "results-unpinned";
     }
 
     protected get results() {
@@ -425,7 +386,7 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
             child?.addDetails(d);
         });
         this.didChange();
-        this.populateShelvedFiles();
+        void this.populateShelvedFiles();
     }
 
     async populateShelvedFiles() {
@@ -447,29 +408,33 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
                 child?.addShelvedFiles(d);
             });
             this.didChange();
-        } catch (err) {}
+        } catch {
+            // Silently ignore shelved file errors
+        }
     }
 
     public async refresh() {
         this._results = dedupe(await this.getNewResults(), "chnum");
         this.clearChildren();
         const children = this._results.map(
-            (r) => new SearchResultItem(this._resource, r)
+            (r) => new SearchResultItem(this._resource, r),
         );
         children.forEach((child) => this.addChild(child));
         this.reveal();
-        this.populateChangeDetails();
+        void this.populateChangeDetails();
     }
 
     protected abstract getNewResults(): Promise<ChangeInfo[]>;
 
     pin() {
         this._isPinned = true;
+        this.contextValue = "results-pinned";
         this.didChange();
     }
 
     unpin() {
         this._isPinned = false;
+        this.contextValue = "results-unpinned";
         this.didChange();
     }
 
@@ -477,21 +442,20 @@ abstract class SearchResultTree extends SelfExpandingTreeItem<SearchResultItem> 
         return this._isPinned;
     }
 
-    get contextValue() {
-        return this._isPinned ? "results-pinned" : "results-unpinned";
-    }
-
     showInQuickPick() {
-        showResultsInQuickPick(
+        void showResultsInQuickPick(
             this._resource,
             this.labelText ?? "Search Results",
-            this._results
+            this._results,
         );
     }
 }
 
 class SingleChangeResultTree extends SearchResultTree {
-    constructor(resource: vscode.Uri, private _result: DescribedChangelist) {
+    constructor(
+        resource: vscode.Uri,
+        private _result: DescribedChangelist,
+    ) {
         super(resource, [_result], "Focused changelist " + _result.chnum);
         this.pin();
     }
@@ -505,7 +469,11 @@ class SingleChangeResultTree extends SearchResultTree {
 }
 
 class MultiSearchResultTree extends SearchResultTree implements Pinnable {
-    constructor(resource: vscode.Uri, private _filters: Filters, results: ChangeInfo[]) {
+    constructor(
+        resource: vscode.Uri,
+        private _filters: Filters,
+        results: ChangeInfo[],
+    ) {
         super(resource, results, MultiSearchResultTree.makeLabelText(_filters, results));
     }
 
@@ -532,7 +500,7 @@ class AllResultsTree extends SelfExpandingTreeItem<
         const child = new MultiSearchResultTree(
             selectedClient.configSource,
             filters,
-            results
+            results,
         );
         this.addChild(child);
         this.didChange();
@@ -559,14 +527,14 @@ class AllResultsTree extends SelfExpandingTreeItem<
 function showResultsInQuickPick(
     resource: vscode.Uri,
     label: string,
-    results: ChangeInfo[]
+    results: ChangeInfo[],
 ) {
     return showQuickPickForChangeSearch(resource, label, results);
 }
 
 async function executeSearch(
     resource: vscode.Uri,
-    filters: Filters
+    filters: Filters,
 ): Promise<ChangeInfo[]> {
     const maxChangelists = configAccessor.changelistSearchMaxResults;
     return await vscode.window.withProgress(
@@ -575,11 +543,13 @@ async function executeSearch(
             p4.getChangelists(resource, {
                 ...filters,
                 maxChangelists,
-            })
+            }),
     );
 }
 
-class ChangelistTreeRoot extends SelfExpandingTreeRoot<any> {
+class ChangelistTreeRoot extends SelfExpandingTreeRoot<
+    ChooseProviderTreeItem | GoToChangelist | FilterRootItem | RunSearch | AllResultsTree
+> {
     private _chooseProvider: ChooseProviderTreeItem;
     private _filterRoot: FilterRootItem;
     private _allResults: AllResultsTree;
@@ -595,21 +565,21 @@ class ChangelistTreeRoot extends SelfExpandingTreeRoot<any> {
         this._allResults = new AllResultsTree();
         this._runSearch = new RunSearch(
             this,
-            new MementoItem(MementoKeys.SEARCH_AUTO_REFRESH, memento)
+            new MementoItem(MementoKeys.SEARCH_AUTO_REFRESH, memento),
         );
         this._subscriptions.push(
             this._filterRoot.onDidChangeFilters(() => {
                 if (this._runSearch.autoRefresh) {
-                    this.executeSearch();
+                    void this.executeSearch();
                 }
-            })
+            }),
         );
         this._subscriptions.push(
             this._runSearch.onChanged(() => {
                 if (this._runSearch.autoRefresh) {
-                    this.executeSearch();
+                    void this.executeSearch();
                 }
-            })
+            }),
         );
         this.addChild(this._chooseProvider);
         this.addChild(new GoToChangelist(this._chooseProvider));
@@ -647,91 +617,91 @@ export function focusChangelist(resource: vscode.Uri, described: DescribedChange
 export function registerChangelistSearch(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
         "perforce.changeSearch.chooseProvider",
-        (arg: ChooseProviderTreeItem) => arg.chooseProvider()
+        (arg: ChooseProviderTreeItem) => arg.chooseProvider(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.resetFilters",
-        (arg: FilterRootItem) => arg.resetAllFilters()
+        (arg: FilterRootItem) => arg.resetAllFilters(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.resetFilter",
-        (arg: FilterItem<any>) => arg.reset()
+        (arg: FilterItem<unknown>) => arg.reset(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.setFilter",
-        (arg: FilterItem<any>) => arg.requestNewValue()
+        (arg: FilterItem<unknown>) => arg.requestNewValue(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.addFileFilter",
-        (arg: FileFilterRoot) => arg.addNewFilter()
+        (arg: FileFilterRoot) => arg.addNewFilter(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.editFileFilter",
-        (arg: FileFilterValue) => arg.edit()
+        (arg: FileFilterValue) => arg.edit(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.removeFileFilter",
-        (arg: FileFilterValue) => arg.dispose()
+        (arg: FileFilterValue) => arg.dispose(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.goToChangelist",
-        (arg: GoToChangelist) => arg.execute()
+        (arg: GoToChangelist) => arg.execute(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.run",
-        (arg: ChangelistTreeRoot) => arg.executeSearch()
+        (arg: ChangelistTreeRoot) => arg.executeSearch(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.refresh",
-        (arg: SearchResultTree) => arg.refresh()
+        (arg: SearchResultTree) => arg.refresh(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.pin",
-        (arg: SearchResultTree) => arg.pin()
+        (arg: SearchResultTree) => arg.pin(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.unpin",
-        (arg: SearchResultTree) => arg.unpin()
+        (arg: SearchResultTree) => arg.unpin(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.delete",
-        (arg: SearchResultTree) => arg.dispose()
+        (arg: SearchResultTree) => arg.dispose(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.showInQuickPick",
-        (arg: SearchResultTree) => arg.showInQuickPick()
+        (arg: SearchResultTree) => arg.showInQuickPick(),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.enableAutoRefresh",
-        (arg: RunSearch) => (arg.autoRefresh = true)
+        (arg: RunSearch) => (arg.autoRefresh = true),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.disableAutoRefresh",
-        (arg: RunSearch) => (arg.autoRefresh = false)
+        (arg: RunSearch) => (arg.autoRefresh = false),
     );
 
     vscode.commands.registerCommand("perforce.changeSearch.diffResult", (arg: Diffable) =>
-        DiffProvider.diffPrevious(arg.perforceUri)
+        DiffProvider.diffPrevious(arg.perforceUri),
     );
 
     vscode.commands.registerCommand(
         "perforce.changeSearch.openResultDoc",
-        (arg: Diffable) => vscode.window.showTextDocument(arg.perforceUri)
+        (arg: Diffable) => vscode.window.showTextDocument(arg.perforceUri),
     );
 
     changelistTree = new ChangelistTreeRoot(context.workspaceState);

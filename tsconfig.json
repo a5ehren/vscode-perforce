@@ -1,15 +1,16 @@
 {
+    "extends": "@tsconfig/node20/tsconfig.json",
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es2019",
-        "lib": [
-            "es2019"
-        ],
         "outDir": "out",
-        "sourceMap": true,
-        "strict": true,
-        "esModuleInterop": true
+        "verbatimModuleSyntax": false
     },
+    "include": [
+        "**/*.ts",
+        "**/*.mts",
+        "**/*.cts",
+        "**/*.mjs",
+        "eslint.config.mjs"
+    ],
     "exclude": [
         "node_modules"
     ]

@@ -291,7 +291,7 @@ export namespace PerforceService {
             };
         });
         const exec = new ShellExecution(cmd, quotedArgs, {
-            cwd: spawnArgs.cwd,
+            cwd: spawnArgs.cwd instanceof URL ? spawnArgs.cwd.toString() : spawnArgs.cwd,
             env,
         });
         try {
@@ -309,7 +309,7 @@ export namespace PerforceService {
                 }
             });
         } catch (err) {
-            responseCallback(err, "", "");
+            responseCallback(err instanceof Error ? err : new Error(String(err)), "", "");
         }
     }
 
@@ -340,7 +340,7 @@ export namespace PerforceService {
     }
 
     async function readStdOut(child: CP.ChildProcess) {
-        let output: string = "";
+        let output = "";
         if (child.stdout) {
             for await (const data of child.stdout) {
                 output += data.toString();
@@ -350,7 +350,7 @@ export namespace PerforceService {
     }
 
     async function readStdErr(child: CP.ChildProcess) {
-        let output: string = "";
+        let output = "";
         if (child.stderr) {
             for await (const data of child.stderr) {
                 output += data.toString();

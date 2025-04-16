@@ -1,39 +1,42 @@
 import { Uri } from "vscode";
 
-export type NoOpts = {};
+export interface NoOpts {}
 
-export type FixedJob = { id: string; description: string[] };
+export interface FixedJob {
+    id: string;
+    description: string[];
+}
 
-export type ChangeInfo = {
+export interface ChangeInfo {
     chnum: string;
     description: string[];
     date?: Date;
     user: string;
     client: string;
     isPending?: boolean;
-};
+}
 
-export type ChangeSpec = {
+export interface ChangeSpec {
     description?: string;
     files?: ChangeSpecFile[];
     change?: string;
     rawFields: RawField[];
-};
+}
 
-export type RawField = {
+export interface RawField {
     name: string;
     value: string[];
-};
+}
 
-export type ChangeSpecFile = {
+export interface ChangeSpecFile {
     depotPath: string;
     action: string;
-};
+}
 
-export type FstatInfo = {
+export interface FstatInfo {
     depotFile: string;
     [key: string]: string;
-};
+}
 
 export type PerforceFile = Uri | string;
 

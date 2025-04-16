@@ -4,7 +4,7 @@ export interface TreeNodeOptions {
     reverseChildren?: boolean;
 }
 
-type TreeRevealOptions = { select?: boolean; focus?: boolean; expand?: boolean | number };
+interface TreeRevealOptions { select?: boolean; focus?: boolean; expand?: boolean | number }
 
 export abstract class SelfExpandingTreeItem<T extends SelfExpandingTreeItem<any>>
     extends vscode.TreeItem

@@ -1,20 +1,14 @@
 import * as p4 from "../../api/PerforceApi";
 import * as vscode from "vscode";
-import * as sinon from "sinon";
+const sinon = require("sinon");
 import { PerforceService } from "../../PerforceService";
 import { getWorkspaceUri } from "../helpers/testUtils";
-
-import { expect } from "chai";
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
+const chai = require("chai");
+const { expect } = chai;
 import { ChangeSpec, ChangeInfo, FixedJob } from "../../api/CommonTypes";
 import { Direction, DescribedChangelist } from "../../api/PerforceApi";
 import * as PerforceUri from "../../PerforceUri";
 import { parseDate } from "../../TsUtils";
-
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
 
 function basicExecuteStub(
     _resource: vscode.Uri,
@@ -54,6 +48,14 @@ function execWithErr(err: Error) {
 }
 
 describe("Perforce API", () => {
+    before(async () => {
+        const [chaiAsPromisedModule, sinonChaiModule] = await Promise.all([
+            import("chai-as-promised"),
+            import("sinon-chai")
+        ]);
+        chai.use(chaiAsPromisedModule.default);
+        chai.use(sinonChaiModule.default);
+    });
     let execute: sinon.SinonStub<Parameters<typeof basicExecuteStub>, void>;
     const ws = getWorkspaceUri();
 
@@ -1012,13 +1014,13 @@ describe("Perforce API", () => {
         });
     });
     describe("annotate", () => {
-        type TestAnnotation = {
+        interface TestAnnotation {
             line: string;
             chnum: string;
             revision: string;
             user: string;
             date: string;
-        };
+        }
         const annotations: TestAnnotation[] = [
             {
                 line: "here is a file",

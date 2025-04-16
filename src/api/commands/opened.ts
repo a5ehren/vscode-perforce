@@ -3,27 +3,27 @@ import { flagMapper, makeSimpleCommand, splitIntoLines } from "../CommandUtils";
 import { PerforceFile } from "../CommonTypes";
 import { isTruthy } from "../../TsUtils";
 
-export type OpenedFileOptions = { chnum?: string; files?: PerforceFile[] };
+export interface OpenedFileOptions { chnum?: string; files?: PerforceFile[] }
 
-export type OpenedFile = {
+export interface OpenedFile {
     depotPath: string;
     revision: string;
     chnum: string;
     operation: string;
     filetype: string;
     message: string;
-};
+}
 
 export enum UnopenedFileReason {
     NOT_OPENED,
     NOT_IN_ROOT,
 }
 
-export type UnopenedFile = {
+export interface UnopenedFile {
     filePath: string;
     reason: UnopenedFileReason;
     message: string;
-};
+}
 
 function parseOpenFile(line: string): OpenedFile | undefined {
     const matches = /(.+)#(\d+)\s-\s([\w\/]+)\s(default\schange|change\s\d+)\s\(([\w\+]+)\)/.exec(
@@ -82,10 +82,10 @@ export async function getOpenedFiles(resource: vscode.Uri, options: OpenedFileOp
     return parseOpenedOutput(output);
 }
 
-export type OpenedFileDetails = {
+export interface OpenedFileDetails {
     open: OpenedFile[];
     unopen: UnopenedFile[];
-};
+}
 
 /**
  * Gets opened files, and if files are specified in the options, the files that are not opened or are out of workspace from that list

@@ -1,4 +1,5 @@
-import { expect } from "chai";
+const chai = require('chai');
+const { expect } = chai;
 
 import * as vscode from "vscode";
 import * as path from "path";

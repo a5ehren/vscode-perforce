@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as Path from "path";
 
-export type UriArguments = {
+export interface UriArguments {
     workspace?: string;
     depot?: boolean;
     command?: string;
@@ -12,11 +12,9 @@ export type UriArguments = {
     depotName?: string;
     authority?: string;
     rev?: string;
-};
+}
 
-type AnyUriArguments = {
-    [key: string]: string | boolean | undefined;
-};
+type AnyUriArguments = Record<string, string | boolean | undefined>;
 
 export function isSameFileOrDepotPath(a: vscode.Uri, b: vscode.Uri) {
     if (isDepotUri(a) && isDepotUri(b)) {
@@ -211,7 +209,7 @@ export function decodeUriQuery(query: string): UriArguments {
         const parts = arg.split("=");
         const name = decodeURIComponent(parts[0]);
         const value = parts[1] ? decodeURIComponent(parts[1]) : true;
-        allArgs[name as keyof AnyUriArguments] = value;
+        allArgs[name] = value;
     });
 
     // a bit of a hack - could violate the type e.g. if allArgs has a bool for a string type

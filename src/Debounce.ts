@@ -63,7 +63,7 @@ class DebouncedCall<P extends any[], T> {
     }
 }
 
-export type DebouncedFunction<P extends any[], T> = {
+export interface DebouncedFunction<P extends any[], T> {
     (...args: P): Promise<T>;
     /**
      * Executes the function without attempting to perform a leading call.
@@ -73,7 +73,7 @@ export type DebouncedFunction<P extends any[], T> = {
      */
     withoutLeadingCall(...args: P): Promise<T>;
     dispose(): void;
-};
+}
 
 /**
  * Factory to create a debounced function that:
@@ -114,7 +114,7 @@ export function debounce<P extends any[], T>(
 
         onCall?.(...args);
 
-        if (!lastDebounced || !lastDebounced.canExecute) {
+        if (!lastDebounced?.canExecute) {
             lastDebounced = new DebouncedCall(func, now, time);
             return lastDebounced.executeNow(...args);
         }
@@ -127,7 +127,7 @@ export function debounce<P extends any[], T>(
 
         onCall?.(...args);
 
-        if (!lastDebounced || !lastDebounced.canExecute) {
+        if (!lastDebounced?.canExecute) {
             lastDebounced = new DebouncedCall(func, now, time);
         }
 

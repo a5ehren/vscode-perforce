@@ -102,7 +102,7 @@ export class Resource implements SourceControlResourceState {
         return DecorationProvider.getDecorations(
             this._statuses,
             this._isShelved,
-            this._isUnresolved
+            this._isUnresolved,
         );
     }
     /**
@@ -173,10 +173,10 @@ export class Resource implements SourceControlResourceState {
         private _isShelved: boolean,
         action: string,
         fstatInfo: FstatInfo,
-        headType?: string
+        headType?: string,
     ) {
         this._statuses = GetStatuses(action);
-        this._workingRevision = fstatInfo["workRev"] ?? fstatInfo["haveRev"] ?? "have"; // (files opened for branch probably have a workRev but no haveRev)
+        this._workingRevision = fstatInfo.workRev ?? fstatInfo.haveRev ?? "have"; // (files opened for branch probably have a workRev but no haveRev)
 
         if (this._isShelved) {
             // force a depot-like path as the resource URI, to sort them together in the tree
@@ -187,22 +187,22 @@ export class Resource implements SourceControlResourceState {
         } else {
             if (!_underlyingUri) {
                 throw new Error(
-                    "Files in the local workspace must have an underlying URI"
+                    "Files in the local workspace must have an underlying URI",
                 );
             }
             this._resourceUri = _underlyingUri;
             this._openUri = _underlyingUri;
-            this._isUnresolved = !!fstatInfo["unresolved"];
-            this._isReresolvable = !!fstatInfo["reresolvable"];
+            this._isUnresolved = !!fstatInfo.unresolved;
+            this._isReresolvable = !!fstatInfo.reresolvable;
             // TODO - do we need the one with the working revision - can't use a perforce: scheme here as it should be a local file
             //PerforceUri.fromUriWithRevision(_underlyingUri, this._workingRevision);
         }
-        this._fromEndRev = fstatInfo["resolveEndFromRev0"];
-        if (fstatInfo["resolveFromFile0"]) {
+        this._fromEndRev = fstatInfo.resolveEndFromRev0;
+        if (fstatInfo.resolveFromFile0) {
             this._fromFile = PerforceUri.fromDepotPath(
                 this._underlyingUri ?? model.workspaceUri,
-                fstatInfo["resolveFromFile0"],
-                this._fromEndRev
+                fstatInfo.resolveFromFile0,
+                this._fromEndRev,
             );
         }
         this._headType = GetFileType(headType);

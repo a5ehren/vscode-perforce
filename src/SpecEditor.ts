@@ -5,8 +5,8 @@ import { TextEncoder } from "util";
 import { Display } from "./Display";
 import { PerforceSCMProvider } from "./ScmProvider";
 
-type SpecInstance = { resource: string; lastAccessed: number };
-type SpecStore = { [key: string]: SpecInstance };
+interface SpecInstance { resource: string; lastAccessed: number }
+type SpecStore = Record<string, SpecInstance>;
 
 abstract class SpecEditor {
     private _state: vscode.Memento;
@@ -84,8 +84,8 @@ abstract class SpecEditor {
 
     public archiveOldItems() {
         // ms sec min hours days
-        const timeAgo = 1000 * 60 * 60 * 24 * 5;
-        const olderThan = new Date().getTime() - timeAgo;
+        const archiveTime = 1000 * 60 * 60 * 24 * 5;
+        const olderThan = new Date().getTime() - archiveTime;
         this.clearCached(olderThan);
     }
 
@@ -231,7 +231,7 @@ abstract class SpecEditor {
             // re-open with new values - old job specs are not valid because of the timestamp
             this.editSpec(resource, newItem ?? item);
         } catch (err) {
-            Display.showImportantError(err);
+            Display.showImportantError(String(err));
         }
     }
 

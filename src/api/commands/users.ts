@@ -17,12 +17,12 @@ const usersFlags = flagMapper<UsersOptions>([["m", "max"]], "userFilters", undef
 
 const usersCommand = makeSimpleCommand("users", usersFlags);
 
-export type UserInfo = {
+export interface UserInfo {
     user: string;
     email: string;
     fullName: string;
     accessDate: string;
-};
+}
 
 function parseUsersLine(line: string) {
     // example:

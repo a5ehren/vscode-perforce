@@ -26,7 +26,7 @@ const integrateFlags = flagMapper<IntegratedOptions>(
 const integratedCommand = makeSimpleCommand("integrated", integrateFlags)
     .ignoringAndHidingStdErr;
 
-export type IntegratedRevision = {
+export interface IntegratedRevision {
     fromFile: string;
     fromStartRev?: string;
     fromEndRev: string;
@@ -34,7 +34,7 @@ export type IntegratedRevision = {
     toFile: string;
     toRev: string;
     displayDirection: string;
-};
+}
 
 function parseIntegratedRevision(line: string): IntegratedRevision | undefined {
     // example:
