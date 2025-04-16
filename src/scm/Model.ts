@@ -30,8 +30,8 @@ import { showQuickPickForJob } from "../quickPick/JobQuickPick";
 import { changeSpecEditor, jobSpecEditor } from "../SpecEditor";
 import { DecorationProvider } from "./DecorationProvider";
 
-function isResourceGroup(arg: any): arg is SourceControlResourceGroup {
-    return arg && arg.id !== undefined;
+function isResourceGroup(arg: unknown): arg is SourceControlResourceGroup {
+    return arg !== null && typeof arg === 'object' && 'id' in arg;
 }
 
 export interface FstatInfo {
@@ -87,10 +87,10 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
     private _refreshInProgress = false;
 
-    public dispose() {
+    public dispose(): void {
         this.clean();
         if (this._disposables) {
-            this._disposables.forEach((d) => d.dispose());
+            this._disposables.forEach((d: Disposable) => { d.dispose(); return; });
             this._disposables = [];
         }
     }
@@ -117,7 +117,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
      */
     private _conflictsByPath = new Set<string>();
 
-    private _refresh: DebouncedFunction<any[], Promise<void>>;
+    private _refresh: DebouncedFunction<(boolean | undefined)[], Promise<void>>;
 
     private readonly _onDidChangeFileDecorationsEmitter = new EventEmitter<
         Uri | Uri[] | undefined
@@ -170,7 +170,6 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
     provideFileDecoration(
         uri: Uri,
-        _token: vscode.CancellationToken,
     ): vscode.ProviderResult<vscode.FileDecoration> {
         const resource = this._openResourcesByPath.get(uri.fsPath);
         if (resource) {
@@ -215,7 +214,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             if (openFile) {
                 Display.channel.appendLine(
                     "Detected conflicting status for file " +
-                        event.file +
+                        event.file.fsPath +
                         "\nSCM provider believes the file is open, but latest 'opened' call does not.\n" +
                         "This is probably caused by an external change such as submitting or reverting the file from another application.",
                 );
@@ -240,14 +239,14 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
     public async GoToChangelist() {
         const chnum = await Display.requestChangelistNumber();
         if (chnum) {
-            showQuickPickForChangelist(this._workspaceUri, chnum);
+            await showQuickPickForChangelist(this._workspaceUri, chnum);
         }
     }
 
     public async GoToJob() {
         const job = await Display.requestJobId();
         if (job) {
-            showQuickPickForJob(this._workspaceUri, job);
+            await showQuickPickForJob(this._workspaceUri, job);
         }
     }
 
@@ -373,7 +372,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
             newChangelistNumber = created.chnum;
             Display.channel.append(created.rawOutput);
-            this.Refresh();
+            await this.Refresh();
         } catch (err) {
             Display.showError(String(err));
         }
@@ -499,7 +498,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         } else {
             await this.SaveToChangelist(descStr);
         }
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async Submit(input: ResourceGroup): Promise<void> {
@@ -518,7 +517,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
         await p4.submitChangelist(this._workspaceUri, { chnum: input.chnum });
         Display.showMessage("Changelist Submitted");
-        this.Refresh();
+        await this.Refresh();
     }
 
     private async createAndSubmitFromSpec(spec: ChangeSpec) {
@@ -533,7 +532,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         });
 
         Display.showMessage("Change " + output.chnum + " submitted");
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async SubmitSelectedFile(resources: Resource[]) {
@@ -561,7 +560,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         }
         spec.description = desc;
 
-        this.createAndSubmitFromSpec(spec);
+        await this.createAndSubmitFromSpec(spec);
     }
 
     private hasShelvedFiles(group: SourceControlResourceGroup) {
@@ -606,7 +605,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
         try {
             const output = await p4.revert(this._workspaceUri, opts);
-            Display.updateEditor();
+            await Display.updateEditor();
             Display.channel.append(output);
             needRefresh = true;
         } catch {
@@ -619,7 +618,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 const output = await p4.deleteChangelist(this._workspaceUri, {
                     chnum: input.chnum,
                 });
-                Display.updateEditor();
+                await Display.updateEditor();
                 Display.channel.append(output);
                 needRefresh = true;
             } catch {
@@ -628,7 +627,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         }
 
         if (needRefresh) {
-            this.Refresh();
+            await this.Refresh();
         }
     }
 
@@ -637,7 +636,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             chnum: chnum,
             paths: ["//..."],
         });
-        Display.updateEditor();
+        await Display.updateEditor();
         Display.channel.append(output);
     }
 
@@ -645,21 +644,21 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         this.assertIsNotDefault(input);
 
         await p4.resolve(this._workspaceUri, { chnum: input.chnum });
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async ReResolveChangelist(input: ResourceGroup) {
         this.assertIsNotDefault(input);
 
         await p4.resolve(this._workspaceUri, { chnum: input.chnum, reresolve: true });
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async ResolveFiles(input: Resource[]) {
         await p4.resolve(this._workspaceUri, {
             files: input.map((i) => i.actionUriNoRev),
         });
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async ReResolveFiles(input: Resource[]) {
@@ -667,7 +666,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             files: input.map((i) => i.actionUriNoRev),
             reresolve: true,
         });
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async ShelveChangelist(input: ResourceGroup, revert?: boolean): Promise<void> {
@@ -684,7 +683,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         } catch (err) {
             Display.showImportantError(String(err));
         }
-        this.Refresh();
+        await this.Refresh();
     }
 
     public async UnshelveChangelist(input: ResourceGroup): Promise<void> {
@@ -698,7 +697,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 toChnum: input.chnum,
                 force: true,
             });
-            this.Refresh();
+            await this.Refresh();
             if (unshelved.warnings.length > 0) {
                 const resolveButton = "Resolve changelist";
                 const chosen = await vscode.window.showWarningMessage(
@@ -716,7 +715,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 );
                 if (chosen === resolveButton) {
                     await p4.resolve(this._workspaceUri, { chnum: input.chnum });
-                    this.Refresh();
+                    await this.Refresh();
                 }
             }
             Display.showMessage("Changelist unshelved");
@@ -744,7 +743,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 chnum: input.chnum,
                 delete: true,
             });
-            this.Refresh();
+            await this.Refresh();
             Display.showMessage("Shelved files deleted");
         } catch (err) {
             Display.showImportantError(String(err));
@@ -761,7 +760,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             await p4.resolve(this._workspaceUri, {
                 files: [input.actionUriNoRev],
             });
-            this.Refresh();
+            await this.Refresh();
         }
     }
 
@@ -799,8 +798,9 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             delete: true,
             paths: [input.depotPath],
         });
+        await Display.updateEditor();
         Display.channel.append(output);
-        this.Refresh();
+        await this.Refresh();
     }
 
     async revertFileAfterUnshelve(input: Resource) {
@@ -833,7 +833,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         }
 
         await p4.revert(this._workspaceUri, { paths: [input.actionUriNoRev] });
-        this.Refresh();
+        await this.Refresh();
     }
 
     async unshelveShelvedFile(input: Resource) {
@@ -842,13 +842,13 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             shelvedChnum: input.change,
             paths: [input.depotPath],
         });
-        this.Refresh();
+        await this.Refresh();
         if (unshelveOutput.warnings.length > 0) {
             await this.showResolveWarningForFile(input);
         } else {
             await this.deleteFileAfterUnshelve(input);
         }
-        Display.updateEditor();
+        await Display.updateEditor();
     }
 
     async shelveOpenFile(input: Resource) {
@@ -857,7 +857,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
             force: true,
             paths: [input.actionUriNoRev],
         });
-        this.Refresh();
+        await this.Refresh();
         await this.revertFileAfterUnshelve(input);
     }
 
@@ -871,9 +871,9 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         const promises = input.map((r) => this.shelveOpenFile(r));
         try {
             await Promise.all(promises);
-        } catch (reason) {
-            Display.showImportantError(String(reason));
-            this.Refresh();
+        } catch (reason: unknown) {
+            Display.showImportantError(reason instanceof Error ? reason.message : String(reason));
+            await this.Refresh();
         }
     }
 
@@ -887,9 +887,9 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
         const promises = input.map((r) => this.unshelveShelvedFile(r));
         try {
             await Promise.all(promises);
-        } catch (reason) {
-            Display.showImportantError(String(reason));
-            this.Refresh();
+        } catch (reason: unknown) {
+            Display.showImportantError(reason instanceof Error ? reason.message : String(reason));
+            await this.Refresh();
         }
     }
 
@@ -913,7 +913,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 chnum: input.change,
                 paths: [input.depotPath],
             });
-            this.Refresh();
+            await this.Refresh();
             Display.showMessage(ret);
         } catch (err) {
             Display.showImportantError(String(err));
@@ -944,7 +944,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
 
         try {
             await p4.fixJob(this._workspaceUri, { chnum: input.chnum, jobId });
-            this.Refresh();
+            await this.Refresh();
             Display.showMessage("Job " + jobId + " added");
         } catch (err) {
             Display.showImportantError(String(err));
@@ -997,7 +997,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 jobId,
                 removeFix: true,
             });
-            this.Refresh();
+            await this.Refresh();
             Display.showMessage("Job " + jobId + " removed");
         } catch (err) {
             Display.showImportantError(String(err));
@@ -1076,11 +1076,12 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 chnum: chnum,
                 files: resources.map((resource) => resource.actionUriNoRev),
             });
+            await Display.updateEditor();
             Display.channel.append(output);
         } catch (reason) {
             Display.showImportantError(String(reason));
         }
-        this.Refresh();
+        await this.Refresh();
     }
 
     private cleanState() {
@@ -1115,7 +1116,7 @@ export class Model implements Disposable, vscode.FileDecorationProvider {
                 files: paths,
             });
             Display.channel.append(output);
-            this.Refresh();
+            await this.Refresh();
         } catch (reason) {
             Display.showImportantError(String(reason));
         }
