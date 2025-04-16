@@ -29,7 +29,7 @@ function logInitProgress(uri: vscode.Uri, message: string) {
     Display.channel.appendLine("> " + uri + ": " + message);
 }
 
-export type ClientRoot = {
+export interface ClientRoot {
     configSource: vscode.Uri;
     clientRoot: vscode.Uri;
     clientName: string;
@@ -37,7 +37,7 @@ export type ClientRoot = {
     serverAddress: string;
     isInRoot: boolean;
     isAboveRoot?: boolean;
-};
+}
 
 async function findClientRoot(uri: vscode.Uri): Promise<ClientRoot | undefined> {
     try {

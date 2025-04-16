@@ -13,7 +13,7 @@ before(async () => {
     chai.use(chaiAsPromised);
 });
 
-type Hello = { hello: string };
+interface Hello { hello: string }
 
 describe("Command Limiter (unit)", () => {
     describe("Queue", () => {

@@ -9,9 +9,9 @@ import * as vscode from "vscode";
 import * as PerforceUri from "../../PerforceUri";
 import { isTruthy } from "../../TsUtils";
 
-export type DeleteChangelistOptions = {
+export interface DeleteChangelistOptions {
     chnum: string;
-};
+}
 
 const deleteChangelistFlags = flagMapper<DeleteChangelistOptions>([["d", "chnum"]]);
 
@@ -19,11 +19,11 @@ export const deleteChangelist = makeSimpleCommand("change", deleteChangelistFlag
     return { logStdOut: true };
 });
 
-export type SubmitChangelistOptions = {
+export interface SubmitChangelistOptions {
     chnum?: string;
     description?: string;
     file?: PerforceFile;
-};
+}
 
 const submitFlags = flagMapper<SubmitChangelistOptions>(
     [
@@ -121,20 +121,20 @@ const unshelveFlags = flagMapper<UnshelveOptions>(
     "paths"
 );
 
-export type UnshelvedFiles = {
+export interface UnshelvedFiles {
     files: UnshelvedFile[];
     warnings: ResolveWarning[];
-};
+}
 
-type ResolveWarning = {
+interface ResolveWarning {
     depotPath: string;
     resolvePath: string;
-};
+}
 
-type UnshelvedFile = {
+interface UnshelvedFile {
     depotPath: string;
     operation: string;
-};
+}
 
 function isUnshelvedFile(obj: any): obj is UnshelvedFile {
     return obj && obj.depotPath !== undefined && obj.operation !== undefined;
@@ -254,12 +254,12 @@ const haveFileFlags = flagMapper<HaveFileOptions>([], "file", [], {
     ignoreRevisionFragments: true,
 });
 
-export type HaveFile = {
+export interface HaveFile {
     depotPath: string;
     revision: string;
     depotUri: vscode.Uri;
     localUri: vscode.Uri;
-};
+}
 
 function parseHaveOutput(resource: vscode.Uri, output: string): HaveFile | undefined {
     const matches = /^(.+)#(\d+) - (.+)/.exec(output);
@@ -290,9 +290,9 @@ export async function have(resource: vscode.Uri, options: HaveFileOptions) {
 // if stdout has any value, we have the file (stderr indicates we don't)
 export const haveFile = asyncOuputHandler(haveFileCmd.ignoringAndHidingStdErr, isTruthy);
 
-export type LoginOptions = {
+export interface LoginOptions {
     password: string;
-};
+}
 
 export const login = makeSimpleCommand(
     "login",
@@ -317,11 +317,11 @@ export async function isLoggedIn(resource: vscode.Uri): Promise<boolean> {
 
 export const logout = makeSimpleCommand<NoOpts>("logout", () => []);
 
-export type ResolveOptions = {
+export interface ResolveOptions {
     chnum?: string;
     reresolve?: boolean;
     files?: PerforceFile[];
-};
+}
 
 const resolveFlags = flagMapper<ResolveOptions>(
     [
@@ -339,10 +339,10 @@ export const resolve = makeSimpleCommand("resolve", resolveFlags, () => {
     return { useTerminal: true };
 });
 
-export type AddOptions = {
+export interface AddOptions {
     chnum?: string;
     files: PerforceFile[];
-};
+}
 const addFlags = flagMapper<AddOptions>([["c", "chnum"]], "files", undefined, {
     ignoreRevisionFragments: true,
 });
@@ -351,10 +351,10 @@ export const add = makeSimpleCommand("add", addFlags, () => {
     return { logStdOut: true };
 });
 
-export type EditOptions = {
+export interface EditOptions {
     chnum?: string;
     files: PerforceFile[];
-};
+}
 const editFlags = flagMapper<EditOptions>([["c", "chnum"]], "files", undefined, {
     ignoreRevisionFragments: true,
 });
@@ -363,10 +363,10 @@ export const edit = makeSimpleCommand("edit", editFlags, () => {
     return { logStdOut: true };
 });
 
-export type MoveOptions = {
+export interface MoveOptions {
     chnum?: string;
     fromToFile: [PerforceFile, PerforceFile];
-};
+}
 const moveFlags = flagMapper<MoveOptions>([["c", "chnum"]], "fromToFile");
 
 export const move = makeSimpleCommand("move", moveFlags, () => {

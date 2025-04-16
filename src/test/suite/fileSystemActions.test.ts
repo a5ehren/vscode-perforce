@@ -38,11 +38,11 @@ function getFile(file: keyof typeof basicFiles): vscode.Uri {
 }
 
 function stubEvent<T>() {
-    type EventAttrs = {
+    interface EventAttrs {
         spy?: sinon.SinonSpy<[T], any>;
         fire?: (e: T) => any;
         registered: boolean;
-    };
+    }
     const attrs: EventAttrs = {
         registered: false,
     };
@@ -66,12 +66,12 @@ function stubEvent<T>() {
     return func;
 }
 
-type WatcherConfig = {
+interface WatcherConfig {
     editOnFileSave?: boolean;
     editOnFileModified?: boolean;
     addOnFileCreate?: boolean;
     deleteOnFileDelete?: boolean;
-};
+}
 
 function stubWatcherConfig(config: ConfigAccessor, values: WatcherConfig) {
     sinon.stub(config, "editOnFileSave").get(() => !!values.editOnFileSave);

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+ 
 import { SinonSpyCall } from "sinon";
 import * as vscode from "vscode";
 import { Resource } from "../../scm/Resource";

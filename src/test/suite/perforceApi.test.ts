@@ -1014,13 +1014,13 @@ describe("Perforce API", () => {
         });
     });
     describe("annotate", () => {
-        type TestAnnotation = {
+        interface TestAnnotation {
             line: string;
             chnum: string;
             revision: string;
             user: string;
             date: string;
-        };
+        }
         const annotations: TestAnnotation[] = [
             {
                 line: "here is a file",

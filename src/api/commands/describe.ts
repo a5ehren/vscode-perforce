@@ -28,11 +28,11 @@ const describeFlags = flagMapper<DescribeOptions>(
 
 const describeCommand = makeSimpleCommand("describe", describeFlags);
 
-export type DepotFileOperation = {
+export interface DepotFileOperation {
     depotPath: string;
     revision: string;
     operation: string;
-};
+}
 
 export type DescribedChangelist = ChangeInfo & {
     affectedFiles: DepotFileOperation[];
@@ -120,7 +120,7 @@ export interface GetShelvedOptions {
     chnums: string[];
 }
 
-export type ShelvedChangeInfo = { chnum: number; paths: string[] };
+export interface ShelvedChangeInfo { chnum: number; paths: string[] }
 
 function parseShelvedDescribeOuput(output: string): ShelvedChangeInfo[] {
     const allLines = splitIntoLines(output.trim());

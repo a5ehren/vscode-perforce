@@ -84,7 +84,7 @@ describe("Model & ScmProvider modules (integration)", () => {
 
     // these are functions, so that a new version StubFile is returned every time
     // mainly because uri.toString() mutates the Uri object and makes it harder to match
-    const basicFiles: { [key: string]: () => StubFile } = {
+    const basicFiles: Record<string, () => StubFile> = {
         edit: () => {
             return {
                 localFile: getLocalFile(workspaceUri, "testFolder", "a.txt"),

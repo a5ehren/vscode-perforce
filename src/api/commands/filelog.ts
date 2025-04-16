@@ -30,15 +30,15 @@ export enum Direction {
     FROM,
 }
 
-export type FileLogIntegration = {
+export interface FileLogIntegration {
     file: string;
     startRev?: string;
     endRev: string;
     operation: string;
     direction: Direction;
-};
+}
 
-export type FileLogItem = {
+export interface FileLogItem {
     file: string;
     description: string;
     revision: string;
@@ -48,7 +48,7 @@ export type FileLogItem = {
     user: string;
     client: string;
     integrations: FileLogIntegration[];
-};
+}
 
 function parseFileLogIntegrations(lines: string[]): FileLogIntegration[] {
     return lines

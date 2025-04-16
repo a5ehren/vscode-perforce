@@ -6,13 +6,13 @@ import { isTruthy } from "../TsUtils";
 
 const nbsp = "\xa0";
 
-export type ColumnOption = {
+export interface ColumnOption {
     name: ValidColumn;
     length: number;
     padLeft: boolean;
     truncateRight: boolean;
     prefix?: string;
-};
+}
 
 type ValidColumn = "revision" | "chnum" | "user" | "client" | "description" | "timeAgo";
 
@@ -45,9 +45,9 @@ export function parseColumn(item: string): ColumnOption | undefined {
     }
 }
 
-type ColumnBehavior = {
+interface ColumnBehavior {
     value: (change: p4.FileLogItem, latestChange: p4.FileLogItem) => string;
-};
+}
 
 type ColumnBehaviors = Record<ValidColumn, ColumnBehavior>;
 

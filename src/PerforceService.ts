@@ -340,7 +340,7 @@ export namespace PerforceService {
     }
 
     async function readStdOut(child: CP.ChildProcess) {
-        let output: string = "";
+        let output = "";
         if (child.stdout) {
             for await (const data of child.stdout) {
                 output += data.toString();
@@ -350,7 +350,7 @@ export namespace PerforceService {
     }
 
     async function readStdErr(child: CP.ChildProcess) {
-        let output: string = "";
+        let output = "";
         if (child.stderr) {
             for await (const data of child.stderr) {
                 output += data.toString();

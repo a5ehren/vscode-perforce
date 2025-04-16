@@ -90,7 +90,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -114,7 +114,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -161,7 +161,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -188,7 +188,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -451,11 +451,11 @@ export namespace PerforceCommands {
         return [resource, ...allUris.filter((f) => f.fsPath !== resource.fsPath)];
     }
 
-    type FileAndDir = {
+    interface FileAndDir {
         file: Uri;
         isDir: boolean;
         dir: Uri;
-    };
+    }
 
     async function mapToFilesByDir(files: Uri[]): Promise<FileAndDir[]> {
         return await Promise.all(
@@ -598,7 +598,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -628,7 +628,7 @@ export namespace PerforceCommands {
             return false;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return false;
         }
 
@@ -681,7 +681,7 @@ export namespace PerforceCommands {
             return;
         }
 
-        if (!editor || !editor.document) {
+        if (!editor?.document) {
             return;
         }
 
@@ -725,7 +725,7 @@ export namespace PerforceCommands {
         let resource = workspace.workspaceFolders[0].uri;
         if (workspace.workspaceFolders.length > 1) {
             // try to find the proper workspace
-            if (window.activeTextEditor && window.activeTextEditor.document) {
+            if (window.activeTextEditor?.document) {
                 const wksFolder = workspace.getWorkspaceFolder(
                     window.activeTextEditor.document.uri
                 );

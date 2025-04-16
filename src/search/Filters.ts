@@ -13,23 +13,23 @@ import * as p4 from "../api/PerforceApi";
 import { Display } from "../Display";
 import { MementoItem, MementoKeys } from "../MementoItem";
 
-type SearchFilterValue<T> = {
+interface SearchFilterValue<T> {
     label: string;
     value?: T;
-};
+}
 
-type SearchFilter = {
+interface SearchFilter {
     name: string;
     placeHolder: string;
     defaultText: string;
-};
+}
 
-export type Filters = {
+export interface Filters {
     user?: string;
     client?: string;
     status?: ChangelistStatus;
     files?: PerforceFile[];
-};
+}
 
 type StringMemento = MementoItem<SearchFilterValue<string>>;
 
@@ -68,7 +68,7 @@ export abstract class FilterItem<T> extends SelfExpandingTreeItem<any> {
 
     private setValueWithoutEvent(value?: SearchFilterValue<T>) {
         this._selected = value;
-        if (value && value.value !== undefined) {
+        if (value?.value !== undefined) {
             this.description = this._selected?.label;
         } else {
             this.description = "<" + this._filter.defaultText + ">";

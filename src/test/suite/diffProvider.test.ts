@@ -29,7 +29,7 @@ describe("Diff Provider", () => {
     }
     const workspaceUri = getWorkspaceUri();
 
-    const basicFiles: { [key: string]: () => StubFile } = {
+    const basicFiles: Record<string, () => StubFile> = {
         edit: () => {
             return {
                 localFile: getLocalFile(workspaceUri, "testFolder", "a.txt"),

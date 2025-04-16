@@ -18,11 +18,11 @@ const branchesFlags = flagMapper<BranchesOptions>([
 
 const branchesCommand = makeSimpleCommand("branches", branchesFlags);
 
-export type BranchInfo = {
+export interface BranchInfo {
     branch: string;
     date: string;
     description: string;
-};
+}
 
 function parseBranchLine(line: string) {
     // example:
