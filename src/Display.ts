@@ -53,7 +53,7 @@ export namespace Display {
         }
     });
 
-    export function initialize(subscriptions: { dispose(): any }[]) {
+    export function initialize(subscriptions: { dispose(): unknown }[]) {
         subscriptions.push(commands.registerCommand("perforce.showOutput", showOutput));
         subscriptions.push(channel);
 
@@ -69,7 +69,8 @@ export namespace Display {
 
         subscriptions.push(window.onDidChangeActiveTextEditor(updateEditor));
 
-        updateEditor();
+        // Using void to explicitly ignore the promise
+        void updateEditor();
     }
 
     export function getLastActiveFileStatus() {
@@ -79,7 +80,8 @@ export namespace Display {
     export function activateStatusBar() {
         if (!_statusBarActivated) {
             _statusBarActivated = true;
-            updateEditor();
+            // Using void to explicitly ignore the promise
+            void updateEditor();
         }
     }
 
@@ -172,8 +174,8 @@ export namespace Display {
         }
 
         return (
-            PerforceUri.isSameFileOrDepotPath(uri, open) ||
-            isSameAsOpenFileByStatus(uri) ||
+            PerforceUri.isSameFileOrDepotPath(uri, open) ??
+            isSameAsOpenFileByStatus(uri) ??
             (await isSameAsOpenHaveFile(uri))
         );
     }
@@ -214,13 +216,18 @@ export namespace Display {
                     await p4.login(resource, { password });
 
                     Display.showMessage("Login successful");
-                    Display.updateEditor();
+                    // Using void to explicitly ignore the promise
+                    void Display.updateEditor();
                     loggedIn = true;
-                } catch {}
+                } catch (err) {
+                    // Log the error
+                    Display.showError(`Login failed: ${err instanceof Error ? err.message : String(err)}`);
+                }
             }
         } else {
             Display.showMessage("Login successful");
-            Display.updateEditor();
+            // Using void to explicitly ignore the promise
+            void Display.updateEditor();
             loggedIn = true;
         }
         return loggedIn;
@@ -230,9 +237,13 @@ export namespace Display {
         try {
             await p4.logout(resource, {});
             Display.showMessage("Logout successful");
-            Display.updateEditor();
+            // Using void to explicitly ignore the promise
+            void Display.updateEditor();
             return true;
-        } catch {}
+        } catch (err) {
+            // Log the error
+            Display.showError(`Logout failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
         return false;
     }
 

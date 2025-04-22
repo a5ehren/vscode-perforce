@@ -91,9 +91,7 @@ export class ConfigAccessor {
         return this.getConfigItem("promptBeforeSubmit") ?? false;
     }
 
-    public get refreshDebounceTime(): number {
-        return 1000;
-    }
+    public readonly refreshDebounceTime: number = 1000;
 
     public get editOnFileSave(): boolean {
         return this.getConfigItem("editOnFileSave") ?? false;

@@ -200,7 +200,7 @@ function diffPreviousUsingLeftInfo(fromDoc: Uri): boolean | Promise<void> {
     const args = PerforceUri.decodeUriQuery(fromDoc.query);
     const workspace = PerforceUri.getUsableWorkspace(fromDoc);
     if (!workspace) {
-        throw new Error("No usable workspace found for " + fromDoc);
+        throw new Error(`No usable workspace found for ${fromDoc.toString()}`);
     }
     if (!args.leftUri) {
         return false;
@@ -271,11 +271,9 @@ export async function diffDefault(
         return;
     }
 
-    if (diffType === undefined) {
-        diffType = resource.isShelved
-            ? DiffType.SHELVE_V_DEPOT
-            : DiffType.WORKSPACE_V_DEPOT;
-    }
+    diffType ??= resource.isShelved
+        ? DiffType.SHELVE_V_DEPOT
+        : DiffType.WORKSPACE_V_DEPOT;
 
     const left = getLeftResource(resource, diffType);
     const right = getRightResource(resource, diffType);
@@ -320,7 +318,7 @@ function getLeftResource(
             case Status.EDIT:
             case Status.INTEGRATE:
             case Status.MOVE_ADD:
-            case Status.BRANCH:
+            case Status.BRANCH: {
                 const leftUri = PerforceUri.fromUriWithRevision(
                     resource.openUri,
                     "@=" + resource.change // still need to specify because the resource could be either the open or workspace file
@@ -329,6 +327,7 @@ function getLeftResource(
                     title: PerforceUri.basenameWithRev(leftUri, "@=" + resource.change),
                     uri: leftUri,
                 };
+            }
             case Status.DELETE:
             case Status.MOVE_DELETE:
         }
@@ -337,12 +336,13 @@ function getLeftResource(
         // left hand side is the depot version
         switch (resource.status) {
             case Status.ADD:
-            case Status.BRANCH:
+            case Status.BRANCH: {
                 return {
                     title: PerforceUri.basenameWithoutRev(resource.openUri) + "#0",
                     uri: emptyDoc,
                 };
-            case Status.MOVE_ADD:
+            }
+            case Status.MOVE_ADD: {
                 // diff against the old file if it is known (always a depot path)
                 return {
                     title: resource.fromFile
@@ -350,10 +350,11 @@ function getLeftResource(
                         : "Depot Version",
                     uri: resource.fromFile ?? emptyDoc,
                 };
+            }
             case Status.INTEGRATE:
             case Status.EDIT:
             case Status.DELETE:
-            case Status.MOVE_DELETE:
+            case Status.MOVE_DELETE: {
                 const leftUri = PerforceUri.fromUriWithRevision(
                     resource.openUri,
                     resource.workingRevision
@@ -362,6 +363,7 @@ function getLeftResource(
                     title: PerforceUri.basenameWithRev(leftUri),
                     uri: leftUri,
                 };
+            }
         }
     }
 }

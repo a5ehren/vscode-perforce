@@ -1,10 +1,10 @@
-class DebouncedCall<P extends any[], T> {
+class DebouncedCall<P extends unknown[], T> {
     private _expires: number;
     private _expired: boolean;
     private _promise?: Promise<T>;
     private _timer?: NodeJS.Timeout;
     res?: (val: T) => void;
-    rej?: (err: any) => void;
+    rej?: (err: Error) => void;
 
     public constructor(
         private _func: (...rest: P) => T,
@@ -33,7 +33,7 @@ class DebouncedCall<P extends any[], T> {
             // a promise for the last execution
             this._promise = new Promise((res, rej) => {
                 this.res = (val: T) => res(val);
-                this.rej = (err: any) => rej(err);
+                this.rej = (err: Error) => rej(err);
             });
         }
 
@@ -46,7 +46,7 @@ class DebouncedCall<P extends any[], T> {
                 const ret = this._func(...args);
                 this.res?.(ret);
             } catch (err) {
-                this.rej?.(err);
+                this.rej?.(err instanceof Error ? err : new Error(String(err)));
             }
             this._expired = true;
         }, this._expires - Date.now());
@@ -58,12 +58,12 @@ class DebouncedCall<P extends any[], T> {
             clearTimeout(this._timer);
         }
         if (this._promise !== undefined && this.rej) {
-            this.rej("Debounced function cancelled");
+            this.rej(new Error("Debounced function cancelled"));
         }
     }
 }
 
-export interface DebouncedFunction<P extends any[], T> {
+export interface DebouncedFunction<P extends unknown[], T> {
     (...args: P): Promise<T>;
     /**
      * Executes the function without attempting to perform a leading call.
@@ -102,7 +102,7 @@ export interface DebouncedFunction<P extends any[], T> {
  * @param time The time to wait before executing the trailing function
  * @returns The debounced function
  */
-export function debounce<P extends any[], T>(
+export function debounce<P extends unknown[], T>(
     func: (...rest: P) => T,
     time: number,
     onCall?: (...args: P) => void

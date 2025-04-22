@@ -1,4 +1,4 @@
-import { timeAgo } from "short-time-ago";
+import { format } from "timeago.js";
 import * as vscode from "vscode";
 
 export function toReadableDateTime(date?: Date) {
@@ -33,5 +33,5 @@ export function toTimeAgo(date?: Date) {
     if (!date) {
         return "???";
     }
-    return timeAgo(date);
+    return format(date, "en_US");
 }

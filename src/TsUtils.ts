@@ -65,9 +65,8 @@ export function splitBy<T, R>(items: T[], keyFunc: (item: T) => R): T[][] {
     const arrs = new Map<R, T[]>();
     items.forEach((item) => {
         const key = keyFunc(item);
-        if (!arrs.get(key)) {
-            arrs.set(key, []);
-        }
+        // Using ??= instead of if-check with get/set
+        arrs.set(key, arrs.get(key) ?? []);
         arrs.get(key)?.push(item);
     });
     return [...arrs.values()];

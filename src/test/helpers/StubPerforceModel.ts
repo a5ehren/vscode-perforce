@@ -1,5 +1,6 @@
 import * as sinon from "sinon";
 import * as vscode from "vscode";
+import quibble from "quibble";
 import * as p4 from "../../api/PerforceApi";
 
 import {
@@ -75,80 +76,110 @@ function makeDefaultInfo(resource: vscode.Uri) {
 export class StubPerforceModel {
     public changelists: StubChangelist[];
 
-    public isLoggedIn: sinon.SinonStub<any>;
-    public deleteChangelist: sinon.SinonStub<any>;
-    public fixJob: sinon.SinonStub<any>;
-    public getChangeSpec: sinon.SinonStub<any>;
-    public getChangelists: sinon.SinonStub<any>;
-    public getFixedJobs: sinon.SinonStub<any>;
-    public getFstatInfoMapped: sinon.SinonStub<any>;
-    public getInfo: sinon.SinonStub<any>;
-    public getOpenedFiles: sinon.SinonStub<any>;
-    public getShelvedFiles: sinon.SinonStub<any>;
-    public haveFile: sinon.SinonStub<any>;
-    public have: sinon.SinonStub<any>;
-    public reopenFiles: sinon.SinonStub<any>;
-    public revert: sinon.SinonStub<any>;
-    public shelve: sinon.SinonStub<any>;
-    public submitChangelist: sinon.SinonStub<any>;
-    public sync: sinon.SinonStub<any>;
-    public unshelve: sinon.SinonStub<any>;
-    public inputChangeSpec: sinon.SinonStub<any>;
-    public del: sinon.SinonStub<any>;
-    public move: sinon.SinonStub<any>;
-    public edit: sinon.SinonStub<any>;
-    public editIgnoringStdErr: sinon.SinonStub<any>;
+    public isLoggedIn: sinon.SinonStub<[], Promise<boolean>>;
+    public deleteChangelist: sinon.SinonStub<[vscode.Uri, string], Promise<string>>;
+    public fixJob: sinon.SinonStub<[vscode.Uri, string, string, string], Promise<string>>;
+    public getChangeSpec: sinon.SinonStub<[vscode.Uri, p4.ChangeSpecOptions], Promise<ChangeSpec>>;
+    public getChangelists: sinon.SinonStub<[vscode.Uri, p4.ChangesOptions?], Promise<ChangeInfo[]>>;
+    public getFixedJobs: sinon.SinonStub<[vscode.Uri, p4.GetFixedJobsOptions], Promise<FixedJob[]>>;
+    public getFstatInfoMapped: sinon.SinonStub<[vscode.Uri, p4.FstatOptions], Promise<(FstatInfo | undefined)[]>>;
+    public getInfo: sinon.SinonStub<[vscode.Uri], Promise<Map<string, string>>>;
+    public getOpenedFiles: sinon.SinonStub<[vscode.Uri, p4.OpenedFileOptions], Promise<p4.OpenedFile[]>>;
+    public getShelvedFiles: sinon.SinonStub<[vscode.Uri, p4.GetShelvedOptions], Promise<p4.ShelvedChangeInfo[]>>;
+    public haveFile: sinon.SinonStub<[vscode.Uri, PerforceFile], Promise<boolean>>;
+    public have: sinon.SinonStub<[vscode.Uri, p4.HaveFileOptions], Promise<p4.HaveFile | undefined>>;
+    public reopenFiles: sinon.SinonStub<[vscode.Uri, string[], string], Promise<string>>;
+    public revert: sinon.SinonStub<[vscode.Uri, p4.RevertOptions], Promise<string>>;
+    public shelve: sinon.SinonStub<[vscode.Uri, p4.ShelveOptions], Promise<string>>;
+    public submitChangelist: sinon.SinonStub<[vscode.Uri, string], Promise<{ rawOutput: string; chnum: string }>>;
+    public sync: sinon.SinonStub<[vscode.Uri, p4.SyncOptions], Promise<string>>;
+    public unshelve: sinon.SinonStub<[vscode.Uri, p4.UnshelveOptions], Promise<p4.UnshelvedFiles>>;
+    public inputChangeSpec: sinon.SinonStub<[vscode.Uri, { spec: ChangeSpec }, p4.InputChangeSpecOptions?], Promise<{ chnum: string; rawOutput: string }>>;
+    public del: sinon.SinonStub<[vscode.Uri, string[]], Promise<string>>;
+    public move: sinon.SinonStub<[vscode.Uri, string, string], Promise<string>>;
+    public edit: sinon.SinonStub<[vscode.Uri, string[]], Promise<string>>;
+    public editIgnoringStdErr: sinon.SinonStub<[vscode.Uri, string[]], Promise<string>>;
 
     constructor() {
         this.changelists = [];
 
-        this.isLoggedIn = sinon.stub(p4, "isLoggedIn").resolves(true);
-        this.deleteChangelist = sinon
-            .stub(p4, "deleteChangelist")
-            .resolves("changelist deleted");
-        this.fixJob = sinon.stub(p4, "fixJob").resolves("job fixed");
-        this.getChangeSpec = sinon
-            .stub(p4, "getChangeSpec")
-            .callsFake(this.resolveChangeSpec.bind(this));
-        this.getChangelists = sinon
-            .stub(p4, "getChangelists")
-            .callsFake(this.resolveChangelists.bind(this));
-        this.getFixedJobs = sinon
-            .stub(p4, "getFixedJobs")
-            .callsFake(this.resolveFixedJobs.bind(this));
-        this.getFstatInfoMapped = sinon
-            .stub(p4, "getFstatInfoMapped")
-            .callsFake(this.fstatFiles.bind(this));
-        this.getInfo = sinon.stub(p4, "getInfo").callsFake(makeDefaultInfo);
-        this.getOpenedFiles = sinon
-            .stub(p4, "getOpenedFiles")
-            .callsFake(this.resolveOpenFiles.bind(this));
-        this.getShelvedFiles = sinon
-            .stub(p4, "getShelvedFiles")
-            .callsFake(this.resolveShelvedFiles.bind(this));
-        this.haveFile = sinon.stub(p4, "haveFile").resolves(true);
-        this.have = sinon.stub(p4, "have").callsFake(this.resolveHave.bind(this));
-        this.reopenFiles = sinon.stub(p4, "reopenFiles").resolves("reopened");
-        this.revert = sinon.stub(p4, "revert").resolves("reverted");
-        this.shelve = sinon.stub(p4, "shelve").resolves("shelved");
-        this.submitChangelist = sinon.stub(p4, "submitChangelist").resolves({
+        // Create all stubs with proper type annotations
+        this.isLoggedIn = sinon.stub<[], Promise<boolean>>().resolves(true);
+        this.deleteChangelist = sinon.stub<[vscode.Uri, string], Promise<string>>().resolves("changelist deleted");
+        this.fixJob = sinon.stub<[vscode.Uri, string, string, string], Promise<string>>().resolves("job fixed");
+        this.getChangeSpec = sinon.stub<[vscode.Uri, p4.ChangeSpecOptions], Promise<ChangeSpec>>().callsFake(this.resolveChangeSpec.bind(this));
+        this.getChangelists = sinon.stub<[vscode.Uri, p4.ChangesOptions?], Promise<ChangeInfo[]>>().callsFake(this.resolveChangelists.bind(this));
+        this.getFixedJobs = sinon.stub<[vscode.Uri, p4.GetFixedJobsOptions], Promise<FixedJob[]>>().callsFake(this.resolveFixedJobs.bind(this));
+        this.getFstatInfoMapped = sinon.stub<[vscode.Uri, p4.FstatOptions], Promise<(FstatInfo | undefined)[]>>().callsFake(this.fstatFiles.bind(this));
+        this.getInfo = sinon.stub<[vscode.Uri], Promise<Map<string, string>>>().callsFake(makeDefaultInfo);
+        this.getOpenedFiles = sinon.stub<[vscode.Uri, p4.OpenedFileOptions], Promise<p4.OpenedFile[]>>().callsFake(this.resolveOpenFiles.bind(this));
+        this.getShelvedFiles = sinon.stub<[vscode.Uri, p4.GetShelvedOptions], Promise<p4.ShelvedChangeInfo[]>>().callsFake(this.resolveShelvedFiles.bind(this));
+        this.haveFile = sinon.stub<[vscode.Uri, PerforceFile], Promise<boolean>>().resolves(true);
+        this.have = sinon.stub<[vscode.Uri, p4.HaveFileOptions], Promise<p4.HaveFile | undefined>>().callsFake(this.resolveHave.bind(this));
+        this.reopenFiles = sinon.stub<[vscode.Uri, string[], string], Promise<string>>().resolves("reopened");
+        this.revert = sinon.stub<[vscode.Uri, p4.RevertOptions], Promise<string>>().resolves("reverted");
+        this.shelve = sinon.stub<[vscode.Uri, p4.ShelveOptions], Promise<string>>().resolves("shelved");
+        this.submitChangelist = sinon.stub<[vscode.Uri, string], Promise<{ rawOutput: string; chnum: string }>>().resolves({
             rawOutput: "submitting...\n change 250 submitted",
             chnum: "250",
         });
-        this.sync = sinon.stub(p4, "sync").resolves("synced");
-        this.unshelve = sinon.stub(p4, "unshelve").resolves({
+        this.sync = sinon.stub<[vscode.Uri, p4.SyncOptions], Promise<string>>().resolves("synced");
+        this.unshelve = sinon.stub<[vscode.Uri, p4.UnshelveOptions], Promise<p4.UnshelvedFiles>>().resolves({
             files: [{ depotPath: "//depot/dummy", operation: "edit" }],
-            warnings: [],
+            warnings: []
         });
-        this.inputChangeSpec = sinon
-            .stub(p4, "inputChangeSpec")
-            .resolves({ chnum: "99", rawOutput: "Change 99 created" });
-        this.del = sinon.stub(p4, "del").resolves("Files deleted");
-        this.move = sinon.stub(p4, "move").resolves("File moved");
-        this.editIgnoringStdErr = sinon
-            .stub(p4.edit, "ignoringAndHidingStdErr")
-            .resolves("File edited");
-        this.edit = sinon.stub(p4, "edit").resolves("File edited");
+        this.inputChangeSpec = sinon.stub<[vscode.Uri, { spec: ChangeSpec }, p4.InputChangeSpecOptions?], Promise<{ chnum: string; rawOutput: string }>>().resolves({ 
+            chnum: "99", 
+            rawOutput: "Change 99 created" 
+        });
+        this.del = sinon.stub<[vscode.Uri, string[]], Promise<string>>().resolves("Files deleted");
+        this.move = sinon.stub<[vscode.Uri, string, string], Promise<string>>().resolves("File moved");
+        this.edit = sinon.stub<[vscode.Uri, string[]], Promise<string>>().resolves("File edited");
+        this.editIgnoringStdErr = sinon.stub<[vscode.Uri, string[]], Promise<string>>().resolves("File edited");
+
+        // Organize stubs by module
+        // All basicOps stubs in a single quibble call
+        quibble("../../api/commands/basicOps", {
+            isLoggedIn: this.isLoggedIn,
+            deleteChangelist: this.deleteChangelist,
+            fixJob: this.fixJob,
+            reopenFiles: this.reopenFiles,
+            revert: this.revert,
+            shelve: this.shelve,
+            sync: this.sync,
+            del: this.del,
+            move: this.move,
+            edit: {
+                default: this.edit,
+                ignoringAndHidingStdErr: this.editIgnoringStdErr
+            },
+            haveFile: this.haveFile,
+            have: this.have,
+            unshelve: this.unshelve,
+            submitChangelist: this.submitChangelist
+        });
+
+        quibble("../../api/commands/changeSpec", {
+            getChangeSpec: this.getChangeSpec,
+            inputChangeSpec: this.inputChangeSpec
+        });
+
+        quibble("../../api/commands/fstat", {
+            getFstatInfoMapped: this.getFstatInfoMapped
+        });
+
+        quibble("../../api/commands/opened", {
+            getOpenedFiles: this.getOpenedFiles
+        });
+
+        quibble("../../api/commands/changes", {
+            getChangelists: this.getChangelists
+        });
+
+        quibble("../../api/commands/describe", {
+            getFixedJobs: this.getFixedJobs,
+            getShelvedFiles: this.getShelvedFiles
+        });
     }
 
     resolveOpenFiles(

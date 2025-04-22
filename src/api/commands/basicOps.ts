@@ -126,12 +126,12 @@ export interface UnshelvedFiles {
     warnings: ResolveWarning[];
 }
 
-interface ResolveWarning {
+export interface ResolveWarning {
     depotPath: string;
     resolvePath: string;
 }
 
-interface UnshelvedFile {
+export interface UnshelvedFile {
     depotPath: string;
     operation: string;
 }

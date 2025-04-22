@@ -3,7 +3,7 @@ import { Event, workspace } from "vscode";
 import * as fs from "fs";
 
 export function mapEvent<I, O>(event: Event<I>, map: (i: I) => O): Event<O> {
-    return (listener, thisArgs = null, disposables?) =>
+    return (listener, thisArgs = null, disposables?) => 
         event((i) => listener.call(thisArgs, map(i)), null, disposables);
 }
 

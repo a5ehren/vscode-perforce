@@ -27,7 +27,11 @@ export async function showComboBoxInput<T extends vscode.QuickPickItem>(
     const quickPick = vscode.window.createQuickPick<T>();
 
     const subscriptions: vscode.Disposable[] = [quickPick];
-    const dispose = () => subscriptions.forEach((sub) => sub.dispose());
+    const dispose = (): void => {
+        subscriptions.forEach((sub) => {
+            sub.dispose();
+        });
+    };
 
     quickPick.matchOnDescription = options.matchOnDescription ?? false;
     quickPick.matchOnDetail = options.matchOnDetail ?? false;

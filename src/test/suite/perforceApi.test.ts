@@ -1,5 +1,6 @@
 import * as p4 from "../../api/PerforceApi";
 import * as vscode from "vscode";
+const quibble = require("quibble");
 const sinon = require("sinon");
 import { PerforceService } from "../../PerforceService";
 import { getWorkspaceUri } from "../helpers/testUtils";
@@ -9,6 +10,8 @@ import { ChangeSpec, ChangeInfo, FixedJob } from "../../api/CommonTypes";
 import { Direction, DescribedChangelist } from "../../api/PerforceApi";
 import * as PerforceUri from "../../PerforceUri";
 import { parseDate } from "../../TsUtils";
+
+const sandbox = sinon.createSandbox();
 
 function basicExecuteStub(
     _resource: vscode.Uri,
@@ -534,7 +537,19 @@ describe("Perforce API", () => {
             ]);
         });
     });
-    describe("revert", () => {
+    describe("revert (using quibble for module mocking)", () => {
+        let originalRevert;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalRevert = p4.revert;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(
                 p4.revert(ws, {
@@ -545,7 +560,19 @@ describe("Perforce API", () => {
             ).to.eventually.equal("revert -a -c 1 c:\\my f%23ile.txt");
         });
     });
-    describe("shelve", () => {
+    describe("shelve (using quibble for module mocking)", () => {
+        let originalShelve;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalShelve = p4.shelve;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(
                 p4.shelve(ws, {
@@ -557,7 +584,19 @@ describe("Perforce API", () => {
             ).to.eventually.equal("shelve -f -d -c 99 myfile.txt");
         });
     });
-    describe("unshelve", () => {
+    describe("unshelve (using quibble for module mocking)", () => {
+        let originalUnshelve;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalUnshelve = p4.unshelve;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("Returns the list of unshelved files and resolve warnings", async () => {
             const output = [
                 "//depot/Project_X/main/README.md#8 - unshelved, opened for edit",
@@ -602,7 +641,19 @@ describe("Perforce API", () => {
             ]);
         });
     });
-    describe("fix job", () => {
+    describe("fix job (using quibble for module mocking)", () => {
+        let originalFixJob;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalFixJob = p4.fixJob;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(
                 p4.fixJob(ws, {
@@ -613,7 +664,19 @@ describe("Perforce API", () => {
             ).to.eventually.equal("fix -c 123456 -d job000001");
         });
     });
-    describe("reopen", () => {
+    describe("reopen (using quibble for module mocking)", () => {
+        let originalReopenFiles;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalReopenFiles = p4.reopenFiles;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(
                 p4.reopenFiles(ws, {
@@ -623,7 +686,19 @@ describe("Perforce API", () => {
             ).to.eventually.equal("reopen -c default a.txt b.txt");
         });
     });
-    describe("sync", () => {
+    describe("sync (using quibble for module mocking)", () => {
+        let originalSync;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalSync = p4.sync;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(p4.sync(ws, {})).to.eventually.equal("sync");
         });
@@ -964,20 +1039,52 @@ describe("Perforce API", () => {
         });
     });
     describe("isLoggedIn", () => {
+        let originalIsLoggedIn: (resource: vscode.Uri) => Promise<boolean>;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalIsLoggedIn = p4.isLoggedIn;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+            // No need to manually restore p4.isLoggedIn as quibble.reset() 
+            // will restore all the original module exports
+        });
+
         it("Returns true on stdout", async () => {
             execute.callsFake(execWithStdOut("login ok"));
+            
+            // Test the real implementation
             await expect(p4.isLoggedIn(ws)).to.eventually.equal(true);
         });
+        
         it("Returns false on stderr", async () => {
             execute.callsFake(execWithStdErr("not logged in"));
+            
             await expect(p4.isLoggedIn(ws)).to.eventually.equal(false);
         });
+        
         it("Returns false on err", async () => {
             execute.callsFake(execWithErr(new Error("oh no")));
+            
             await expect(p4.isLoggedIn(ws)).to.eventually.equal(false);
         });
     });
-    describe("login", () => {
+    describe("login (using quibble for module mocking)", () => {
+        let originalLogin;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalLogin = p4.login;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await p4.login(ws, { password: "hunter2" });
             expect(execute).to.have.been.calledWith(
@@ -1001,16 +1108,82 @@ describe("Perforce API", () => {
             ).to.eventually.be.rejectedWith("more bad password");
         });
     });
-    describe("logout", () => {
+    describe("logout (using quibble for module mocking)", () => {
+        let originalLogout;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalLogout = p4.logout;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(p4.logout(ws, {})).to.eventually.equal("logout");
         });
     });
-    describe("delete", () => {
+    describe("delete (using quibble for module mocking)", () => {
+        let originalDelete;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalDelete = p4.del;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
         it("uses the correct arguments", async () => {
             await expect(
                 p4.del(ws, { paths: ["//depot/hello", "//depot/bla"], chnum: "1" })
             ).to.eventually.equal("delete -c 1 //depot/hello //depot/bla");
+        });
+    });
+    describe("deleteChangelist", () => {
+        let originalDeleteChangelist;
+        
+        beforeEach(() => {
+            // Store the original module export
+            originalDeleteChangelist = p4.deleteChangelist;
+        });
+
+        afterEach(() => {
+            // Restore original function after each test
+            quibble.reset();
+        });
+        
+        it("uses the correct arguments", async () => {
+            execute.callsFake(execWithStdOut("Change 123 deleted."));
+            
+            await expect(
+                p4.deleteChangelist(ws, { chnum: "123" })
+            ).to.eventually.equal("Change 123 deleted.");
+            
+            expect(execute).to.have.been.calledWith(ws, "change", sinon.match.any, [
+                "-d",
+                "123"
+            ]);
+        });
+        
+        it("Throws on stderr", async () => {
+            execute.callsFake(execWithStdErr("Change 456 has files associated with it."));
+            
+            await expect(
+                p4.deleteChangelist(ws, { chnum: "456" })
+            ).to.eventually.be.rejectedWith("Change 456 has files associated with it.");
+        });
+        
+        it("Throws on err", async () => {
+            execute.callsFake(execWithErr(new Error("Cannot delete default changelist.")));
+            
+            await expect(
+                p4.deleteChangelist(ws, { chnum: "default" })
+            ).to.eventually.be.rejectedWith("Cannot delete default changelist.");
         });
     });
     describe("annotate", () => {

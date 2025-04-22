@@ -1244,8 +1244,7 @@ describe("Model & ScmProvider modules (integration)", () => {
                     .resolves(undefined);
                 items.stubModel.unshelve.resolves({
                     files: [
-                        { depotPath: basicFiles.edit().depotPath, operation: "edit" },
-                        ,
+                        { depotPath: basicFiles.edit().depotPath, operation: "edit" }
                     ],
                     warnings: [
                         {
@@ -1652,8 +1651,7 @@ describe("Model & ScmProvider modules (integration)", () => {
                 );
                 items.stubModel.unshelve.resolves({
                     files: [
-                        { depotPath: basicFiles.edit().depotPath, operation: "edit" },
-                        ,
+                        { depotPath: basicFiles.edit().depotPath, operation: "edit" }
                     ],
                     warnings: [
                         {

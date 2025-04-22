@@ -51,7 +51,7 @@ export class Queue<T> {
 
 interface QueuedCommand {
     id: string;
-    command: (callback: LimiterCallback) => any;
+    command: (callback: LimiterCallback) => Promise<void>;
     callback: LimiterCallback;
 }
 
@@ -94,7 +94,7 @@ export class CommandLimiter {
      * @returns a promise that resolves once the job has called the callback, or rejects if the job throws an error (regardless of whether it called the callback)
      */
     public submit(
-        command: (callback: LimiterCallback) => Promise<any>,
+        command: (callback: LimiterCallback) => Promise<void>,
         id: string
     ): Promise<void> {
         let item: QueuedCommand;
@@ -105,15 +105,12 @@ export class CommandLimiter {
             };
             item = {
                 id,
-                command: () => {
+                command: async (callback: LimiterCallback) => {
                     try {
-                        command(doneCallback).catch((err) => {
-                            this.completed(id);
-                            rej(err);
-                        });
+                        await command(callback);
                     } catch (err) {
                         this.completed(id);
-                        rej(err);
+                        rej(err instanceof Error ? err : new Error(String(err)));
                     }
                 },
                 callback: doneCallback,
@@ -147,7 +144,10 @@ export class CommandLimiter {
             console.log(this.logPrefix + " EXECUTING " + item.id);
         }
         this._running.set(item.id, item);
-        setImmediate(() => item.command(item.callback));
+        setImmediate(() => {
+            // Using void to explicitly mark that we're ignoring the promise
+            void item.command(item.callback);
+        });
     }
 
     private executeNext() {
