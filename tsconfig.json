@@ -1,14 +1,12 @@
 {
     "extends": "@tsconfig/node20/tsconfig.json",
+    "allowDefaultProject": true,
     "compilerOptions": {
         "outDir": "out",
         "verbatimModuleSyntax": false
     },
     "include": [
-        "**/*.ts",
-        "**/*.mts",
-        "**/*.cts",
-        "**/*.mjs",
+        "src/**/*.ts",
         "eslint.config.mjs"
     ],
     "exclude": [
